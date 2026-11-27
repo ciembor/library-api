@@ -9,12 +9,12 @@ RSpec.describe BorrowingTimestampsValidator, "#validate", mutant_expression: "Bo
     Borrowing.new({ book: book, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days }.merge(attributes))
   end
 
-  it "delegates model validation to the timestamp constraints", mutant_expression: "BorrowingTimestampsValidator#validate" do
-    record = borrowing(due_at: borrowed_at + 29.days)
+  it "adds errors for both timestamp invariants", mutant_expression: "BorrowingTimestampsValidator#validate" do
+    record = borrowing(due_at: borrowed_at + 29.days, returned_at: borrowed_at - 1.second)
 
     described_class.new.validate(record)
 
-    expect(record.errors[:due_at]).to contain_exactly("must be 30 days after borrowing")
+    expect(record.errors.to_hash).to include(due_at: [ "must be 30 days after borrowing" ], returned_at: [ "must be on or after borrowing" ])
   end
 
   it "uses its configured borrowing period", mutant_expression: "BorrowingTimestampsValidator#validate" do

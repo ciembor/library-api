@@ -5,7 +5,7 @@ class BorrowingsController < ApplicationController
       serial_number: six_digit_identifier(:book_serial_number),
       library_card_number: six_digit_identifier(:library_card_number, borrowing_params[:library_card_number])
     ).call
-    render json: { data: BorrowingTimestampsSerializer.new(borrowing).as_json }, status: :created
+    render json: { data: { borrowed_at: borrowing.borrowed_at, due_at: borrowing.due_at } }, status: :created
   end
 
   private

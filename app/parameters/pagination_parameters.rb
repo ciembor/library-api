@@ -7,8 +7,8 @@ class PaginationParameters
   def initialize(params, default_per_page:, maximum_per_page:, maximum_page:)
     @maximum_page = maximum_page
     @maximum_per_page = maximum_per_page
-    @page = PaginationValue.new(params.fetch(:page, 1)).integer
-    @per_page = PaginationValue.new(params.fetch(:per_page, default_per_page)).integer
+    @page = integer_value(params.fetch(:page, 1))
+    @per_page = integer_value(params.fetch(:per_page, default_per_page))
   end
 
   def valid?
@@ -22,5 +22,16 @@ class PaginationParameters
 
   def to_h
     { page: page, per_page: per_page }
+  end
+
+  private
+
+  # Keeps the query-value parsing policy with its pagination contract.
+  # :reek:FeatureEnvy,UtilityFunction { enabled: false }
+  def integer_value(value)
+    return value if value.is_a?(Integer)
+    return unless value.is_a?(String) && value.match?(/\A(?:0|[1-9]\d*)\z/)
+
+    Integer(value, exception: false)
   end
 end
