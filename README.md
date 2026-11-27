@@ -77,7 +77,15 @@ RAILS_ENV=test DATABASE_URL=postgresql://library:library@127.0.0.1:5433/momentum
   bin/diagrams
 ```
 
-The command writes `docs/diagrams/erd.svg` and `docs/diagrams/classes.svg`. Pass a destination directory as its only argument when a different location is needed. The generated files are ignored because they are derived from the current source.
+The command writes `docs/diagrams/erd.svg` and `docs/diagrams/classes.svg`. Pass a destination directory as its only argument when a different location is needed. Commit refreshed diagrams whenever model associations or the application class structure changes.
+
+### Entity relationship diagram
+
+![Entity relationship diagram](docs/diagrams/erd.svg)
+
+### Class diagram
+
+![Class diagram](docs/diagrams/classes.svg)
 
 ## HTTP contract
 
