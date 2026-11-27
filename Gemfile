@@ -58,4 +58,7 @@ group :development, :test do
   # RSpec is used by Mutant's supported test integration.
   gem "rspec-rails", require: false
   gem "mutant-rspec", require: false
+
+  # Generates OpenAPI documentation from request specs.
+  gem "rswag"
 end
