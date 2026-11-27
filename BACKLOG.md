@@ -28,10 +28,11 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 ### 1. Szkielet aplikacji i uruchamianie
 
-- [ ] Utworzyć aplikację Rails w trybie API z PostgreSQL oraz `Dockerfile` i `compose.yaml`.
+- [x] Utworzyć aplikację Rails w trybie API z PostgreSQL oraz `Dockerfile` i `compose.yaml`.
 - [ ] W Compose uruchamiać bazę, aplikację i proces Solid Queue; aplikacja czeka na gotowość bazy i wykonuje migracje przed startem.
-- [ ] Utrwalać dane PostgreSQL w named volume; przebudowa obrazu oraz odtworzenie kontenerów nie mogą usuwać danych.
-- [ ] Przygotować `GET /up` jako kontrolę zdrowia.
+- [x] Utrwalać dane PostgreSQL w named volume; przebudowa obrazu oraz odtworzenie kontenerów nie mogą usuwać danych.
+- [x] Przygotować `GET /up` jako kontrolę zdrowia.
+- [ ] Po przebudowie obrazu z aktualnym bundle sprawdzić dostępność Rswag UI pod `/api-docs` i wygenerowanej specyfikacji pod `/api-docs/v1/swagger.yaml`.
 - [ ] Dodać krótki `README.md`: `docker compose up`, adres API i OpenAPI UI, przykładowe żądania, uruchamianie testów i decyzje projektowe.
 
 **Akceptacja:** świeży checkout po `docker compose up` uruchamia API bez ręcznych kroków; ponowny start nie niszczy danych.
@@ -53,7 +54,8 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 - [ ] `GET /books/:serial_number` — dane książki, status i pełna historia wypożyczeń, od najnowszego: data wypożyczenia, termin zwrotu, data zwrotu i dane czytelnika.
 - [ ] `DELETE /books/:serial_number` — archiwizować książkę i zwrócić `204`; odrzucić próbę archiwizacji wypożyczonej książki (`409`). Historia pozostaje w bazie, a numer seryjny nie jest ponownie używany.
 - [ ] `POST /readers` — rejestracja czytelnika, aby wypożyczenie mogło wskazać istniejący numer karty.
-- [ ] Wysyłać odpowiedzi sukcesu jako `application/json`.
+- [ ] `GET /readers/:library_card_number` — odszukać czytelnika po numerze karty; brak rekordu zwraca `404`.
+- [ ] Wysyłać odpowiedzi sukcesu z treścią jako `application/json`; `DELETE` z kodem `204` nie ma treści, a techniczny `GET /up` nie należy do kontraktu JSON API.
 - [ ] Zdefiniować spójne błędy zgodne z RFC 9457 (`application/problem+json`) dla `400/404/409/422`: `type`, `title`, `status`, `detail` i opcjonalny `errors` dla pól.
 
 **Akceptacja:** pracownik może dodać i odszukać książkę oraz czytelnika; lista pokazuje dostępność; szczegóły pokazują całą historię; archiwalna książka znika z listy, a jej historia pozostaje zachowana.
@@ -81,10 +83,10 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 - [ ] Testy żądań dla wszystkich endpointów: poprawne odpowiedzi, walidacja, brak zasobu, konflikty i historia.
 - [ ] Testy przepływu wypożyczenie/zwrot, ograniczenia bazy przy równoległych próbach oraz przypomnień z kontrolowanym czasem.
-- [ ] Tworzyć request specs RSpec z Rswag jako źródło OpenAPI 3.1; generować i sprawdzać specyfikację oraz udostępnić Swagger UI pod `/api-docs`.
+- [ ] Tworzyć request specs RSpec z Rswag jako źródło OpenAPI 3.1; zmienić wygenerowane `openapi: 3.0.1` na 3.1, generować plik i walidować go jako OpenAPI 3.1 oraz udostępnić Swagger UI pod `/api-docs`.
 - [ ] Testować również odpowiedzi RFC 9457, typy MIME i kontrakt błędów.
-- [ ] Utrzymać 100% line i branch coverage dla kodu `app/`, Reek bez ostrzeżeń, RuboCop po autokorekcie bez wykroczeń oraz Mutant bez żywych mutacji.
-- [ ] Zmienić GitHub Actions na uruchamianie `bin/quality`, przygotowanie testowej bazy PostgreSQL oraz generowanie i weryfikację OpenAPI.
+- [ ] Utrzymać 100% line i branch coverage dla kodu `app/`, Reek bez ostrzeżeń, RuboCop po autokorekcie bez wykroczeń oraz Mutant bez żywych mutacji. Po dodaniu logiki domenowej wymagać co najmniej jednego podmiotu Mutant i rzeczywiście wykonanych mutacji; wynik `0 subjects / 0 mutations` nie potwierdza jakości testów mutacyjnych.
+- [ ] Zmienić GitHub Actions na uruchamianie `bin/quality`, przygotowanie testowej bazy PostgreSQL oraz generowanie i weryfikację OpenAPI. Po autokorekcie RuboCop sprawdzać `git diff --exit-code`, żeby CI nie akceptowało kodu, który poprawiło tylko w swoim checkoutcie.
 - [ ] W README podać przykładowe żądania i odpowiedzi JSON, opis kodów HTTP, sposób podglądu przypomnień oraz znane ograniczenia.
 - [ ] Sprawdzić kompletne uruchomienie w czystym środowisku Compose oraz uruchomienie testów w kontenerze.
 
