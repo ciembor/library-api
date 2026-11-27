@@ -50,4 +50,24 @@ RSpec.describe SendBorrowingReminderJob do
 
     described_class.perform_now(borrowing.id, "due_date")
   end
+
+  it "does not send the due-date reminder after a return between both reminder times" do
+    perform("three_days_before")
+    borrowing.update!(returned_at: borrowed_at + 28.days)
+
+    perform("due_date")
+
+    expect(BorrowingReminder.where(borrowing: borrowing).pluck(:kind)).to eq([ "three_days_before" ])
+  end
+
+  it "does not apply a stale job to a later borrowing of the same book" do
+    previous_borrowing = borrowing
+    previous_borrowing.update!(returned_at: borrowed_at + 1.day)
+    next_borrowing = Borrowing.create!(book: book, reader: reader, borrowed_at: borrowed_at + 2.days, due_at: borrowed_at + 32.days)
+
+    described_class.perform_now(previous_borrowing.id, "due_date")
+
+    expect(BorrowingReminder.where(borrowing: previous_borrowing)).to be_empty
+    expect(BorrowingReminder.where(borrowing: next_borrowing)).to be_empty
+  end
 end
