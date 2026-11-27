@@ -1,7 +1,9 @@
 /coverage/
+/log/*.log
 /.yardoc
 /.mutant/
 /.env
+/config/master.key
 /spec/examples.txt
 /tmp/*
 !/tmp/.keep

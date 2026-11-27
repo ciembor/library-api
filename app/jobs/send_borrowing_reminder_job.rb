@@ -1,5 +1,7 @@
 # Prepares a reminder only while the borrowing remains active.
 class SendBorrowingReminderJob < ApplicationJob
+  retry_on ActiveRecord::ConnectionNotEstablished, ActiveRecord::Deadlocked, wait: :polynomially_longer, attempts: 5
+
   def perform(borrowing_id, kind)
     @kind = kind
     borrowing = Borrowing.find_by(id: borrowing_id)
