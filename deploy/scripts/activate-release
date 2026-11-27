@@ -29,5 +29,5 @@ systemctl restart library-api-worker.service
 nginx -t
 systemctl reload nginx
 
-curl --fail --retry 12 --retry-delay 2 --connect-timeout 2 --max-time 5 http://127.0.0.1:3002/up
-curl --fail --retry 12 --retry-delay 2 --connect-timeout 2 --max-time 5 http://127.0.0.1:3002/api-docs/v1/swagger.yaml
+curl --fail --retry 12 --retry-connrefused --retry-delay 2 --connect-timeout 2 --max-time 5 http://127.0.0.1:3002/up
+curl --fail --retry 12 --retry-connrefused --retry-delay 2 --connect-timeout 2 --max-time 5 http://127.0.0.1:3002/api-docs/v1/swagger.yaml
