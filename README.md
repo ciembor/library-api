@@ -68,7 +68,7 @@ bash bin/openapi-quality
 
 ## Architecture diagrams
 
-`rails-erd` with `ruby-graphviz` generates the entity relationship diagram from Active Record associations and `yard` generates the UML class diagram from Ruby source. Both are development-only dependencies. Install Graphviz first (`brew install graphviz` on macOS or `apt-get install graphviz` on Debian/Ubuntu). Start the Compose database, then generate both SVG files against the test database:
+`rails-erd` with `ruby-graphviz` generates the entity relationship diagram in UML notation from Active Record associations and `yard` generates the UML class diagram from Ruby source. The ERD labels each end of a relationship with its cardinality, for example `1`, `0..1`, and `0..*`. Both are development-only dependencies. Install Graphviz first (`brew install graphviz` on macOS or `apt-get install graphviz` on Debian/Ubuntu). Start the Compose database, then generate both SVG files against the test database:
 
 ```bash
 bundle install
