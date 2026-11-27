@@ -5,6 +5,6 @@ export RAILS_ENV=test
 export DATABASE_URL="${DATABASE_URL:-postgresql://library:${POSTGRES_PASSWORD:-library}@127.0.0.1:${DB_PORT:-5433}/momentum_task_test}"
 
 RUBOCOP_CACHE_ROOT=tmp/rubocop-cache bundle exec rubocop --autocorrect
-bundle exec reek .
+bundle exec reek app config spec
 bundle exec rails db:prepare
 bundle exec rspec

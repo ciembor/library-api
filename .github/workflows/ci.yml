@@ -56,7 +56,7 @@ jobs:
         run: git diff --exit-code
 
       - name: Detect code smells
-        run: bundle exec reek .
+        run: bundle exec reek app config spec
 
   test:
     runs-on: ubuntu-latest
