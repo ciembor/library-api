@@ -21,8 +21,7 @@ class BooksController < ApplicationController
 
   def show
     book = find_book
-    borrowings = book.borrowings.includes(:reader).order(borrowed_at: :desc, id: :desc)
-    render json: { data: BookSerializer.new(book, borrowings: borrowings).as_json }
+    render json: { data: serialized_details(book) }
   end
 
   def destroy
@@ -38,5 +37,16 @@ class BooksController < ApplicationController
 
   def find_book
     Book.find_by!(serial_number: six_digit_identifier(:serial_number))
+  end
+
+  def serialized_details(book)
+    borrowings = book.borrowings.includes(:reader).order(borrowed_at: :desc, id: :desc).to_a
+    BookSerializer.new(book, borrowings: borrowings, status: history_status(borrowings)).as_json
+  end
+
+  # Derives a response field from the immutable history snapshot.
+  # :reek:UtilityFunction { enabled: false }
+  def history_status(borrowings)
+    borrowings.any? { |borrowing| !borrowing.returned_at } ? "borrowed" : "available"
   end
 end

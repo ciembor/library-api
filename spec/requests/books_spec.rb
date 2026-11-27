@@ -144,7 +144,7 @@ RSpec.describe "Books API", type: :request do
       end
 
       expect(catalog_queries.count).to eq(3)
-      expect(history_queries.count).to eq(4)
+      expect(history_queries.count).to eq(3)
     end
 
     it "rejects invalid page parameters" do

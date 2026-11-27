@@ -111,9 +111,20 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/momentum_task_test
         run: bash bin/openapi-quality
 
+  compose_smoke:
+    name: Compose smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Verify Docker Compose application
+        run: bash bin/compose-smoke
+
   deploy:
     name: Deploy production
-    needs: [scan_ruby, lint, test]
+    needs: [scan_ruby, lint, test, compose_smoke]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:

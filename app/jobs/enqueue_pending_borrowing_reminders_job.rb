@@ -4,7 +4,7 @@ class EnqueuePendingBorrowingRemindersJob < ApplicationJob
   # :reek:UtilityFunction { enabled: false }
   def perform
     BorrowingReminderSchedule.pending.includes(:borrowing).find_each do |schedule|
-      BorrowingReminderScheduler.new(schedule.borrowing).schedule
+      BorrowingReminderScheduler.new(schedule.borrowing).schedule_safely(schedule)
     end
   end
 end

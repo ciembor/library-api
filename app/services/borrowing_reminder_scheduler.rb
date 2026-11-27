@@ -6,12 +6,12 @@ class BorrowingReminderScheduler
     @borrowing = borrowing
   end
 
-  def schedule
-    @borrowing.reminder_schedules.pending.find_each { |schedule| schedule.enqueue(SendBorrowingReminderJob) }
+  def schedule(schedule = nil)
+    pending_schedules(schedule).find_each { |pending_schedule| pending_schedule.enqueue(SendBorrowingReminderJob) }
   end
 
-  def schedule_safely
-    schedule
+  def schedule_safely(schedule = nil)
+    schedule(schedule)
   rescue ActiveJob::EnqueueError, SolidQueue::Job::EnqueueError => error
     Rails.logger.error("Reminder scheduling failed for borrowing #{@borrowing.id}: #{error.message}")
   end
@@ -25,5 +25,10 @@ class BorrowingReminderScheduler
   def schedules
     due_at = @borrowing.due_at
     [ [ "three_days_before", due_at - REMINDER_LEAD_TIME ], [ "due_date", due_at ] ]
+  end
+
+  def pending_schedules(schedule)
+    scope = @borrowing.reminder_schedules.pending
+    schedule ? scope.where(id: schedule.id) : scope
   end
 end
