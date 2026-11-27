@@ -35,7 +35,7 @@ curl http://localhost:3000/readers/654321
 
 ## Tests and quality gate
 
-With Ruby 3.4.8, the project bundle, and the Compose database running, run:
+With Ruby 3.4.13, the project bundle, and the Compose database running, run:
 
 ```bash
 bundle install
