@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-default_site="/etc/nginx/sites-available/default"
+active_site="/etc/nginx/sites-enabled/default"
 include_statement="    include /etc/nginx/snippets/library-api.conf;"
 
-if ! grep --fixed-strings --quiet "$include_statement" "$default_site"; then
-  sed -i "s|^    location / {|$include_statement\n\n    location / {|" "$default_site"
+if ! grep --fixed-strings --quiet "$include_statement" "$active_site"; then
+  sed -i "s|^    location / {|$include_statement\n\n    location / {|" "$active_site"
 fi
 
 nginx -t
