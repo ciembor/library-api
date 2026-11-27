@@ -1,4 +1,6 @@
 /coverage/
+/docs/diagrams/
+/.yardoc
 /.mutant/
 /.env
 /spec/examples.txt

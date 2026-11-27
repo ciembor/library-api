@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+output_directory="${1:-docs/diagrams}"
+class_diagram_dot="$output_directory/classes.dot"
+
+mkdir -p "$output_directory"
+
+bundle exec erd --generator graphviz --filename "$output_directory/erd" --filetype svg \
+  --attributes primary_keys,foreign_keys,content
+test -s "$output_directory/erd.svg"
+bundle exec yardoc --no-output app lib
+bundle exec yard graph --full --dependencies --file "$class_diagram_dot"
+dot -Tsvg "$class_diagram_dot" -o "$output_directory/classes.svg"
+rm "$class_diagram_dot"
+test -s "$output_directory/classes.svg"

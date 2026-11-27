@@ -66,6 +66,19 @@ The checked-in OpenAPI 3.1 contract is generated from executable Rswag request s
 bash bin/openapi-quality
 ```
 
+## Architecture diagrams
+
+`rails-erd` with `ruby-graphviz` generates the entity relationship diagram from Active Record associations and `yard` generates the UML class diagram from Ruby source. Both are development-only dependencies. Install Graphviz first (`brew install graphviz` on macOS or `apt-get install graphviz` on Debian/Ubuntu). Start the Compose database, then generate both SVG files against the test database:
+
+```bash
+bundle install
+docker compose up -d db
+RAILS_ENV=test DATABASE_URL=postgresql://library:library@127.0.0.1:5433/momentum_task_test \
+  bin/diagrams
+```
+
+The command writes `docs/diagrams/erd.svg` and `docs/diagrams/classes.svg`. Pass a destination directory as its only argument when a different location is needed. The generated files are ignored because they are derived from the current source.
+
 ## HTTP contract
 
 | Endpoint | Success | Error responses |

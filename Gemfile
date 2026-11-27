@@ -62,3 +62,12 @@ group :development, :test do
   # Generates OpenAPI documentation from request specs.
   gem "rswag"
 end
+
+group :development do
+  # Generates an entity-relationship diagram from Active Record models.
+  gem "rails-erd", "~> 2.2", require: false
+  gem "ruby-graphviz", "~> 1.2", require: false
+
+  # Generates a UML class diagram from Ruby source code.
+  gem "yard", "~> 0.9", require: false
+end
