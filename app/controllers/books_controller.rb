@@ -11,12 +11,11 @@ class BooksController < ApplicationController
   end
 
   def index
-    page = integer_parameter(:page, default: 1, maximum: Float::INFINITY)
-    per_page = integer_parameter(:per_page, default: DEFAULT_PER_PAGE, maximum: MAX_PER_PAGE)
-    return if performed?
+    pagination = PaginationParameters.new(params, default_per_page: DEFAULT_PER_PAGE, maximum_per_page: MAX_PER_PAGE)
+    return render_bad_request(pagination.error_detail) unless pagination.valid?
 
     books = Book.where(archived_at: nil).includes(:active_borrowing).order(:serial_number)
-    render json: BookCollectionSerializer.new(books, page: page, per_page: per_page).as_json
+    render json: BookCollectionSerializer.new(books, **pagination.to_h).as_json
   end
 
   def show
