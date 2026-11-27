@@ -58,10 +58,35 @@ docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgresql://library:l
 
 If `POSTGRES_PASSWORD` is set, substitute its value for `library` in those test URLs.
 
-Regenerate the OpenAPI file after adding Rswag request specs:
+The checked-in OpenAPI 3.1 contract is generated from executable Rswag request specs. Regenerate and verify it after changing an endpoint:
 
 ```bash
-SIMPLECOV_ENABLED=false bundle exec rake rswag:specs:swaggerize
+bash bin/openapi-quality
+```
+
+## HTTP contract
+
+| Endpoint | Success | Error responses |
+| --- | --- | --- |
+| `POST /books` | `201` with a book | `400`, `422` |
+| `GET /books` | `200` with paginated books | `400` |
+| `GET /books/:serial_number` | `200` with full borrowing history | `404` |
+| `DELETE /books/:serial_number` | `204` | `404`, `409` |
+| `POST /readers` | `201` with a reader | `400`, `422` |
+| `GET /readers/:library_card_number` | `200` with a reader | `404` |
+| `POST /books/:serial_number/borrowings` | `201` with borrowing timestamps | `400`, `404`, `409` |
+| `POST /books/:serial_number/returns` | `200` with the return timestamp | `404`, `409` |
+
+Every JSON success response has a top-level `data` object. Error responses follow RFC 9457 and use `application/problem+json`; for example:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Validation failed",
+  "status": 422,
+  "detail": "The submitted data is invalid.",
+  "errors": { "title": ["can't be blank"] }
+}
 ```
 
 ## Design notes

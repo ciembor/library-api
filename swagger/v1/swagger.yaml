@@ -3,6 +3,419 @@ openapi: 3.1.0
 info:
   title: Library API
   version: v1
-paths: {}
+  description: API used by library staff to manage books, readers and borrowings.
+paths:
+  "/books":
+    post:
+      summary: Create a book
+      tags:
+      - Books
+      parameters: []
+      responses:
+        '201':
+          description: book created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/book"
+        '400':
+          description: book payload missing
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+        '422':
+          description: book is invalid
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - book
+              properties:
+                book:
+                  "$ref": "#/components/schemas/book_input"
+    get:
+      summary: List available catalog entries
+      tags:
+      - Books
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: catalog returned
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/book"
+                  meta:
+                    type: object
+                    required:
+                    - page
+                    - per_page
+                    - total
+        '400':
+          description: pagination is invalid
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+  "/books/{serial_number}":
+    parameters:
+    - name: serial_number
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get a book and its borrowing history
+      tags:
+      - Books
+      responses:
+        '200':
+          description: book returned
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    allOf:
+                    - "$ref": "#/components/schemas/book"
+                    properties:
+                      borrowings:
+                        type: array
+                        items:
+                          "$ref": "#/components/schemas/borrowing"
+        '404':
+          description: book missing
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+    delete:
+      summary: Archive an available book
+      tags:
+      - Books
+      responses:
+        '204':
+          description: book archived
+        '404':
+          description: book missing
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+        '409':
+          description: book is borrowed
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+  "/readers":
+    post:
+      summary: Register a reader
+      tags:
+      - Readers
+      parameters: []
+      responses:
+        '201':
+          description: reader created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/reader"
+        '400':
+          description: reader payload missing
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+        '422':
+          description: reader is invalid
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - reader
+              properties:
+                reader:
+                  "$ref": "#/components/schemas/reader"
+  "/readers/{library_card_number}":
+    parameters:
+    - name: library_card_number
+      in: path
+      required: true
+      schema:
+        type: integer
+    get:
+      summary: Get a reader
+      tags:
+      - Readers
+      responses:
+        '200':
+          description: reader returned
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/reader"
+        '404':
+          description: reader missing
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+  "/books/{book_serial_number}/borrowings":
+    parameters:
+    - name: book_serial_number
+      in: path
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Borrow a book
+      tags:
+      - Borrowings
+      parameters: []
+      responses:
+        '201':
+          description: borrowing created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - borrowed_at
+                    - due_at
+                    properties:
+                      borrowed_at:
+                        type: string
+                        format: date-time
+                      due_at:
+                        type: string
+                        format: date-time
+        '400':
+          description: borrowing payload missing
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+        '404':
+          description: book or reader missing
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+        '409':
+          description: book already borrowed
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - borrowing
+              properties:
+                borrowing:
+                  type: object
+                  required:
+                  - library_card_number
+                  properties:
+                    library_card_number:
+                      type: integer
+  "/books/{book_serial_number}/returns":
+    parameters:
+    - name: book_serial_number
+      in: path
+      required: true
+      schema:
+        type: integer
+    post:
+      summary: Return a book
+      tags:
+      - Borrowings
+      responses:
+        '200':
+          description: return recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                    - returned_at
+                    properties:
+                      returned_at:
+                        type: string
+                        format: date-time
+        '404':
+          description: book missing
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
+        '409':
+          description: book is not borrowed
+          content:
+            application/problem+json:
+              schema:
+                "$ref": "#/components/schemas/problem"
 servers:
 - url: "/"
+components:
+  schemas:
+    book:
+      type: object
+      required:
+      - serial_number
+      - title
+      - author
+      - status
+      properties:
+        serial_number:
+          type: integer
+          minimum: 100000
+          maximum: 999999
+        title:
+          type: string
+        author:
+          type: string
+        status:
+          type: string
+          enum:
+          - available
+          - borrowed
+    book_input:
+      type: object
+      required:
+      - serial_number
+      - title
+      - author
+      properties:
+        serial_number:
+          type: integer
+          minimum: 100000
+          maximum: 999999
+        title:
+          type: string
+        author:
+          type: string
+    reader:
+      type: object
+      required:
+      - library_card_number
+      - full_name
+      - email
+      properties:
+        library_card_number:
+          type: integer
+          minimum: 100000
+          maximum: 999999
+        full_name:
+          type: string
+        email:
+          type: string
+          format: email
+    borrowing:
+      type: object
+      required:
+      - borrowed_at
+      - due_at
+      - returned_at
+      - reader
+      properties:
+        borrowed_at:
+          type: string
+          format: date-time
+        due_at:
+          type: string
+          format: date-time
+        returned_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+        reader:
+          "$ref": "#/components/schemas/reader"
+    problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - detail
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string

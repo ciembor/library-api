@@ -81,14 +81,14 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 ### 6. Testy i dokumentacja kontraktu
 
-- [ ] Testy żądań dla wszystkich endpointów: poprawne odpowiedzi, walidacja, brak zasobu, konflikty i historia.
-- [ ] Testy przepływu wypożyczenie/zwrot, ograniczenia bazy przy równoległych próbach oraz przypomnień z kontrolowanym czasem.
-- [ ] Tworzyć request specs RSpec z Rswag jako źródło OpenAPI 3.1; zmienić wygenerowane `openapi: 3.0.1` na 3.1, generować plik i walidować go jako OpenAPI 3.1 oraz udostępnić Swagger UI pod `/api-docs`.
-- [ ] Testować również odpowiedzi RFC 9457, typy MIME i kontrakt błędów.
-- [ ] Utrzymać 100% line i branch coverage dla kodu `app/`, Reek bez ostrzeżeń, RuboCop po autokorekcie bez wykroczeń oraz Mutant bez żywych mutacji. Po dodaniu logiki domenowej wymagać co najmniej jednego podmiotu Mutant i rzeczywiście wykonanych mutacji; wynik `0 subjects / 0 mutations` nie potwierdza jakości testów mutacyjnych.
-- [ ] Zmienić GitHub Actions na uruchamianie `bin/quality`, przygotowanie testowej bazy PostgreSQL oraz generowanie i weryfikację OpenAPI. Po autokorekcie RuboCop sprawdzać `git diff --exit-code`, żeby CI nie akceptowało kodu, który poprawiło tylko w swoim checkoutcie.
-- [ ] W README podać przykładowe żądania i odpowiedzi JSON, opis kodów HTTP, sposób podglądu przypomnień oraz znane ograniczenia.
-- [ ] Sprawdzić kompletne uruchomienie w czystym środowisku Compose oraz uruchomienie testów w kontenerze.
+- [x] Testy żądań dla wszystkich endpointów: poprawne odpowiedzi, walidacja, brak zasobu, konflikty i historia.
+- [x] Testy przepływu wypożyczenie/zwrot, ograniczenia bazy przy równoległych próbach oraz przypomnień z kontrolowanym czasem.
+- [x] Tworzyć request specs RSpec z Rswag jako źródło OpenAPI 3.1; zmienić wygenerowane `openapi: 3.0.1` na 3.1, generować plik i walidować go jako OpenAPI 3.1 oraz udostępnić Swagger UI pod `/api-docs`.
+- [x] Testować również odpowiedzi RFC 9457, typy MIME i kontrakt błędów.
+- [x] Utrzymać 100% line i branch coverage dla kodu `app/`, Reek bez ostrzeżeń, RuboCop po autokorekcie bez wykroczeń oraz Mutant bez żywych mutacji. Po dodaniu logiki domenowej wymagać co najmniej jednego podmiotu Mutant i rzeczywiście wykonanych mutacji; wynik `0 subjects / 0 mutations` nie potwierdza jakości testów mutacyjnych.
+- [x] Zmienić GitHub Actions na uruchamianie `bin/quality`, przygotowanie testowej bazy PostgreSQL oraz generowanie i weryfikację OpenAPI. Po autokorekcie RuboCop sprawdzać `git diff --exit-code`, żeby CI nie akceptowało kodu, który poprawiło tylko w swoim checkoutcie.
+- [x] W README podać przykładowe żądania i odpowiedzi JSON, opis kodów HTTP, sposób podglądu przypomnień oraz znane ograniczenia.
+- [x] Sprawdzić kompletne uruchomienie w czystym środowisku Compose oraz uruchomienie testów w kontenerze.
 
 **Akceptacja:** opisane przykłady działają na świeżej bazie, testy przechodzą, a reviewer może zweryfikować przypomnienia bez konfiguracji zewnętrznego dostawcy email.
 

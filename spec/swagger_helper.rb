@@ -19,10 +19,59 @@ RSpec.configure do |config|
       openapi: '3.1.0',
       info: {
         title: 'Library API',
-        version: 'v1'
+        version: 'v1',
+        description: 'API used by library staff to manage books, readers and borrowings.'
       },
       paths: {},
-      servers: [ { url: '/' } ]
+      servers: [ { url: '/' } ],
+      components: {
+        schemas: {
+          book: {
+            type: :object,
+            required: %w[serial_number title author status],
+            properties: {
+              serial_number: { type: :integer, minimum: 100_000, maximum: 999_999 },
+              title: { type: :string }, author: { type: :string },
+              status: { type: :string, enum: %w[available borrowed] }
+            }
+          },
+          book_input: {
+            type: :object,
+            required: %w[serial_number title author],
+            properties: {
+              serial_number: { type: :integer, minimum: 100_000, maximum: 999_999 },
+              title: { type: :string }, author: { type: :string }
+            }
+          },
+          reader: {
+            type: :object,
+            required: %w[library_card_number full_name email],
+            properties: {
+              library_card_number: { type: :integer, minimum: 100_000, maximum: 999_999 },
+              full_name: { type: :string }, email: { type: :string, format: :email }
+            }
+          },
+          borrowing: {
+            type: :object,
+            required: %w[borrowed_at due_at returned_at reader],
+            properties: {
+              borrowed_at: { type: :string, format: 'date-time' },
+              due_at: { type: :string, format: 'date-time' },
+              returned_at: { type: %w[string null], format: 'date-time' },
+              reader: { '$ref' => '#/components/schemas/reader' }
+            }
+          },
+          problem: {
+            type: :object,
+            required: %w[type title status detail],
+            properties: {
+              type: { type: :string, format: :uri }, title: { type: :string },
+              status: { type: :integer }, detail: { type: :string },
+              errors: { type: :object, additionalProperties: { type: :array, items: { type: :string } } }
+            }
+          }
+        }
+      }
     }
   }
 

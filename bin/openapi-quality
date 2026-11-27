@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SIMPLECOV_ENABLED=false bundle exec rake rswag:specs:swaggerize
+bundle exec ruby script/normalize_openapi.rb
+bundle exec ruby script/verify_openapi.rb
+
+if command -v git >/dev/null && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git diff --exit-code -- swagger/v1/swagger.yaml
+fi
