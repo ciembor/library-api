@@ -6,14 +6,33 @@ API w Ruby on Rails i PostgreSQL pozwala pracownikowi dodać i usunąć książk
 
 Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno kończyć się działającym, możliwym do sprawdzenia fragmentem systemu.
 
+## Uzgodniony stack i standardy
+
+| Element | Wybór |
+| --- | --- |
+| Framework | Ruby on Rails 8, API-only |
+| Baza danych | PostgreSQL |
+| Format API | `application/json` |
+| Błędy | RFC 9457, `application/problem+json` |
+| Dokumentacja | OpenAPI 3.1 |
+| Dokumentacja testowana | Rswag oraz request specs RSpec |
+| Zadania w tle | Active Job + Solid Queue |
+| Maile | Action Mailer; w MVP zapis payloadu i logowanie |
+| Testy | RSpec |
+| Konteneryzacja | Docker Compose z trwałym named volume PostgreSQL |
+| CI | GitHub Actions |
+| Linter | RuboCop Rails Omakase z autokorektą |
+| Jakość | Reek bez zapachów, 100% line i branch coverage, Mutant bez żywych mutacji |
+
 ## P0 — działające API
 
 ### 1. Szkielet aplikacji i uruchamianie
 
 - [ ] Utworzyć aplikację Rails w trybie API z PostgreSQL oraz `Dockerfile` i `compose.yaml`.
-- [ ] W Compose uruchamiać bazę, aplikację i proces wykonujący zadania w tle; aplikacja czeka na gotowość bazy i wykonuje migracje przed startem.
+- [ ] W Compose uruchamiać bazę, aplikację i proces Solid Queue; aplikacja czeka na gotowość bazy i wykonuje migracje przed startem.
+- [ ] Utrwalać dane PostgreSQL w named volume; przebudowa obrazu oraz odtworzenie kontenerów nie mogą usuwać danych.
 - [ ] Przygotować `GET /up` jako kontrolę zdrowia.
-- [ ] Dodać krótki `README.md`: `docker compose up`, adres API, przykładowe żądania, uruchamianie testów i decyzje projektowe.
+- [ ] Dodać krótki `README.md`: `docker compose up`, adres API i OpenAPI UI, przykładowe żądania, uruchamianie testów i decyzje projektowe.
 
 **Akceptacja:** świeży checkout po `docker compose up` uruchamia API bez ręcznych kroków; ponowny start nie niszczy danych.
 
@@ -34,7 +53,8 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 - [ ] `GET /books/:serial_number` — dane książki, status i pełna historia wypożyczeń, od najnowszego: data wypożyczenia, termin zwrotu, data zwrotu i dane czytelnika.
 - [ ] `DELETE /books/:serial_number` — archiwizować książkę i zwrócić `204`; odrzucić próbę archiwizacji wypożyczonej książki (`409`). Historia pozostaje w bazie, a numer seryjny nie jest ponownie używany.
 - [ ] `POST /readers` — rejestracja czytelnika, aby wypożyczenie mogło wskazać istniejący numer karty.
-- [ ] Ustalić spójne odpowiedzi błędów JSON dla `400/404/409/422` i udokumentować je w README.
+- [ ] Wysyłać odpowiedzi sukcesu jako `application/json`.
+- [ ] Zdefiniować spójne błędy zgodne z RFC 9457 (`application/problem+json`) dla `400/404/409/422`: `type`, `title`, `status`, `detail` i opcjonalny `errors` dla pól.
 
 **Akceptacja:** pracownik może dodać i odszukać książkę oraz czytelnika; lista pokazuje dostępność; szczegóły pokazują całą historię; archiwalna książka znika z listy, a jej historia pozostaje zachowana.
 
@@ -50,9 +70,9 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 ### 5. Przypomnienia o zwrocie
 
-- [ ] Po wypożyczeniu zaplanować dwa zadania: na `due_at - 3 dni` i `due_at`. Zadania wykonuje proces worker uruchamiany przez Compose.
+- [ ] Po wypożyczeniu zaplanować przez Active Job/Solid Queue dwa zadania: na `due_at - 3 dni` i `due_at`. Zadania wykonuje proces worker uruchamiany przez Compose.
 - [ ] Przed przygotowaniem przypomnienia ponownie sprawdzić, czy wypożyczenie nadal jest aktywne. Po zwrocie nie tworzyć przypomnień.
-- [ ] Zapisywać lub logować pełny payload: adres email, dane czytelnika, tytuł książki, numer seryjny, termin zwrotu i rodzaj przypomnienia.
+- [ ] Generować przypomnienia Action Mailer i użyć adaptera zapisującego/logującego pełny payload: adres email, dane czytelnika, tytuł książki, numer seryjny, termin zwrotu i rodzaj przypomnienia.
 - [ ] Dodać rejestr wysłanych przypomnień z unikalnym kluczem `(borrowing_id, kind)`, aby ponowienie zadania nie tworzyło duplikatu. W tym MVP „wysłanie” oznacza trwałe zapisanie payloadu i jego zalogowanie.
 
 **Akceptacja:** aktywne wypożyczenie generuje dokładnie po jednym przypomnieniu w obu terminach; zwrot przed terminem je pomija; ponowne wykonanie zadania nie dubluje wpisu.
@@ -61,6 +81,10 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 - [ ] Testy żądań dla wszystkich endpointów: poprawne odpowiedzi, walidacja, brak zasobu, konflikty i historia.
 - [ ] Testy przepływu wypożyczenie/zwrot, ograniczenia bazy przy równoległych próbach oraz przypomnień z kontrolowanym czasem.
+- [ ] Tworzyć request specs RSpec z Rswag jako źródło OpenAPI 3.1; generować i sprawdzać specyfikację oraz udostępnić Swagger UI pod `/api-docs`.
+- [ ] Testować również odpowiedzi RFC 9457, typy MIME i kontrakt błędów.
+- [ ] Utrzymać 100% line i branch coverage dla kodu `app/`, Reek bez ostrzeżeń, RuboCop po autokorekcie bez wykroczeń oraz Mutant bez żywych mutacji.
+- [ ] Zmienić GitHub Actions na uruchamianie `bin/quality`, przygotowanie testowej bazy PostgreSQL oraz generowanie i weryfikację OpenAPI.
 - [ ] W README podać przykładowe żądania i odpowiedzi JSON, opis kodów HTTP, sposób podglądu przypomnień oraz znane ograniczenia.
 - [ ] Sprawdzić kompletne uruchomienie w czystym środowisku Compose oraz uruchomienie testów w kontenerze.
 
