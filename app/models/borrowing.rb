@@ -8,10 +8,6 @@ class Borrowing < ApplicationRecord
   validate :due_at_matches_borrowed_at
   validate :returned_at_follows_borrowed_at
 
-  def api_data
-    { borrowed_at: borrowed_at, due_at: due_at, returned_at: returned_at, reader: reader.api_data }
-  end
-
   private
 
   def due_at_matches_borrowed_at

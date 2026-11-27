@@ -18,7 +18,7 @@ class ReminderDelivery
   def payload
     message = BorrowingReminderMailer.reminder(@borrowing, @kind).message
     book = @borrowing.book
-    { to: message.to.first, subject: message.subject, body: message.body.decoded, reader: @borrowing.reader.api_data,
+    { to: message.to.first, subject: message.subject, body: message.body.decoded, reader: ReaderSerializer.new(@borrowing.reader).as_json,
       book: { serial_number: book.serial_number, title: book.title }, due_at: @borrowing.due_at.iso8601, kind: @kind }
   end
 end

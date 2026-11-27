@@ -20,7 +20,7 @@ RSpec.describe SendBorrowingReminderJob do
     expect(reminder.payload).to include(
       "to" => reader.email,
       "subject" => "Library book due in 3 days",
-      "reader" => reader.api_data.stringify_keys,
+      "reader" => ReaderSerializer.new(reader).as_json.stringify_keys,
       "book" => { "serial_number" => book.serial_number, "title" => book.title },
       "due_at" => borrowing.due_at.iso8601,
       "kind" => "three_days_before"

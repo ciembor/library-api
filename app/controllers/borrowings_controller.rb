@@ -2,7 +2,7 @@
 class BorrowingsController < ApplicationController
   def create
     borrowing = BorrowBook.new(serial_number: params[:book_serial_number], library_card_number: borrowing_params[:library_card_number]).call
-    render json: { data: borrowing.slice(:borrowed_at, :due_at) }, status: :created
+    render json: { data: BorrowingTimestampsSerializer.new(borrowing).as_json }, status: :created
   end
 
   private

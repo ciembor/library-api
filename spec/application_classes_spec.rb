@@ -6,5 +6,6 @@ RSpec.describe "application base classes" do
     expect(ApplicationJob).to be < ActiveJob::Base
     expect(ApplicationMailer).to be < ActionMailer::Base
     expect(ApplicationRecord).to be < ActiveRecord::Base
+    expect(BorrowingConflict).to be < StandardError
   end
 end

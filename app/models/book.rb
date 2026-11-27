@@ -9,10 +9,4 @@ class Book < ApplicationRecord
   def status
     active_borrowing ? "borrowed" : "available"
   end
-
-  def api_data(borrowings: nil)
-    data = { serial_number: serial_number, title: title, author: author, status: status }
-    data[:borrowings] = borrowings.map(&:api_data) if borrowings
-    data
-  end
 end

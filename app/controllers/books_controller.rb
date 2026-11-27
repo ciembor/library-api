@@ -7,7 +7,7 @@ class BooksController < ApplicationController
     book = Book.new(book_params)
     return render_validation_errors(book) unless book.save
 
-    render json: { data: book.api_data }, status: :created
+    render json: { data: BookSerializer.new(book).as_json }, status: :created
   end
 
   def index
@@ -16,13 +16,13 @@ class BooksController < ApplicationController
     return if performed?
 
     books = Book.where(archived_at: nil).includes(:active_borrowing).order(:serial_number)
-    render json: { data: books.offset((page - 1) * per_page).limit(per_page).map(&:api_data), meta: { page: page, per_page: per_page, total: books.count } }
+    render json: BookCollectionSerializer.new(books, page: page, per_page: per_page).as_json
   end
 
   def show
     book = find_book
     borrowings = book.borrowings.includes(:reader).order(borrowed_at: :desc)
-    render json: { data: book.api_data(borrowings: borrowings) }
+    render json: { data: BookSerializer.new(book, borrowings: borrowings).as_json }
   end
 
   def destroy
