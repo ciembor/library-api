@@ -26,7 +26,7 @@ class BooksController < ApplicationController
   end
 
   def destroy
-    ArchiveBook.new(serial_number: params[:serial_number]).call
+    ArchiveBook.new(serial_number: six_digit_identifier(:serial_number)).call
     head :no_content
   end
 
@@ -37,6 +37,6 @@ class BooksController < ApplicationController
   end
 
   def find_book
-    Book.find_by!(serial_number: params[:serial_number])
+    Book.find_by!(serial_number: six_digit_identifier(:serial_number))
   end
 end

@@ -8,7 +8,7 @@ class ReadersController < ApplicationController
   end
 
   def show
-    reader = Reader.find_by!(library_card_number: params[:library_card_number])
+    reader = Reader.find_by!(library_card_number: six_digit_identifier(:library_card_number))
     render json: { data: ReaderSerializer.new(reader).as_json }
   end
 

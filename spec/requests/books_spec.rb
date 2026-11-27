@@ -131,6 +131,12 @@ RSpec.describe "Books API", type: :request do
       get "/books/999999"
       expect_problem(:not_found, "Not found")
     end
+
+    it "rejects malformed book identifiers" do
+      get "/books/123456abc"
+
+      expect_problem(:bad_request, "Bad request")
+    end
   end
 
   describe "invalid request payloads" do
@@ -196,6 +202,25 @@ RSpec.describe "Books API", type: :request do
       expect_problem(:bad_request, "Bad request")
     end
 
+    it "rejects malformed borrowing structures and missing card numbers" do
+      book = create_book
+
+      [ nil, [], "borrowing", 123_456, {} ].each do |borrowing|
+        post "/books/#{book.serial_number}/borrowings", params: { borrowing: borrowing }, as: :json
+
+        expect_problem(:bad_request, "Bad request")
+      end
+
+      expect(Borrowing.where(book: book)).to be_empty
+    end
+
+    it "rejects malformed book identifiers without creating a borrowing" do
+      post "/books/123456abc/borrowings", params: { borrowing: { library_card_number: reader.library_card_number } }, as: :json
+
+      expect_problem(:bad_request, "Bad request")
+      expect(Borrowing.count).to eq(0)
+    end
+
     it "returns not found for an unknown book or reader" do
       post "/books/999999/borrowings", params: { borrowing: { library_card_number: reader.library_card_number } }, as: :json
       expect_problem(:not_found, "Not found")
@@ -240,6 +265,12 @@ RSpec.describe "Books API", type: :request do
 
       post "/books/999999/returns", as: :json
       expect_problem(:not_found, "Not found")
+    end
+
+    it "rejects malformed book identifiers" do
+      post "/books/123456abc/returns", as: :json
+
+      expect_problem(:bad_request, "Bad request")
     end
   end
 end

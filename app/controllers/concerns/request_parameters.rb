@@ -8,4 +8,11 @@ module RequestParameters
 
     object.permit(*attributes)
   end
+
+  def six_digit_identifier(name)
+    value = Integer(params.fetch(name), exception: false)
+    return value if value&.between?(100_000, 999_999)
+
+    raise ActionController::ParameterMissing, name
+  end
 end

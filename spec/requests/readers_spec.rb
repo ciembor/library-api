@@ -72,5 +72,13 @@ RSpec.describe "Readers API", type: :request do
       get "/readers/999999"
       expect_problem(:not_found, "Not found")
     end
+
+    it "rejects malformed reader identifiers" do
+      [ "99999", "1000000", "123456abc" ].each do |identifier|
+        get "/readers/#{identifier}"
+
+        expect_problem(:bad_request, "Bad request")
+      end
+    end
   end
 end
