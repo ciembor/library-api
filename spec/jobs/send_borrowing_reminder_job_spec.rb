@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe SendBorrowingReminderJob do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:book) { Book.create!(serial_number: 123_456, title: "Dune", author: "Frank Herbert") }
   let(:reader) { Reader.create!(library_card_number: 654_321, full_name: "Ada Lovelace", email: "ada@example.com") }
   let(:borrowed_at) { Time.utc(2026, 11, 27, 12) }
@@ -33,6 +35,16 @@ RSpec.describe SendBorrowingReminderJob do
     perform("due_date")
 
     expect(BorrowingReminder.where(borrowing: borrowing, kind: "due_date")).to contain_exactly(have_attributes(payload: include("subject" => "Library book due today")))
+  end
+
+  it "delivers one durable payload for each scheduled reminder time" do
+    travel_to(borrowing.due_at - 72.hours) { perform("three_days_before") }
+    travel_to(borrowing.due_at) { perform("due_date") }
+
+    expect(BorrowingReminder.where(borrowing: borrowing)).to contain_exactly(
+      have_attributes(kind: "three_days_before", sent_at: borrowing.due_at - 72.hours, payload: include("kind" => "three_days_before")),
+      have_attributes(kind: "due_date", sent_at: borrowing.due_at, payload: include("kind" => "due_date"))
+    )
   end
 
   it "skips a returned borrowing" do
