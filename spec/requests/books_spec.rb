@@ -60,6 +60,21 @@ RSpec.describe "Books API", type: :request do
   end
 
   describe "GET /books" do
+    it "returns an empty collection when there are no catalog books" do
+      get "/books"
+
+      expect(json).to eq("data" => [], "meta" => { "page" => 1, "per_page" => 20, "total" => 0 })
+    end
+
+    it "excludes a collection containing only archived books" do
+      create_book(book_attributes.merge(archived_at: Time.current))
+      create_book(book_attributes.merge(serial_number: 123_457, archived_at: Time.current))
+
+      get "/books"
+
+      expect(json).to eq("data" => [], "meta" => { "page" => 1, "per_page" => 20, "total" => 0 })
+    end
+
     it "returns non-archived books with status and pagination metadata" do
       available = create_book
       borrowed = create_book(book_attributes.merge(serial_number: 123_457))
@@ -87,6 +102,42 @@ RSpec.describe "Books API", type: :request do
       get "/books", params: { page: 2, per_page: 1 }
 
       expect(json).to include("data" => [ include("serial_number" => second.serial_number) ], "meta" => { "page" => 2, "per_page" => 1, "total" => 2 })
+    end
+
+    it "returns a partial final page and an empty page beyond the catalog" do
+      create_book
+      create_book(book_attributes.merge(serial_number: 123_457))
+      third = create_book(book_attributes.merge(serial_number: 123_458))
+
+      get "/books", params: { page: 2, per_page: 2 }
+      expect(json).to eq(
+        "data" => [ { "serial_number" => third.serial_number, "title" => third.title, "author" => third.author, "status" => "available" } ],
+        "meta" => { "page" => 2, "per_page" => 2, "total" => 3 }
+      )
+
+      get "/books", params: { page: 3, per_page: 2 }
+      expect(json).to eq("data" => [], "meta" => { "page" => 3, "per_page" => 2, "total" => 3 })
+    end
+
+    it "uses a bounded number of queries for catalog and history responses" do
+      book = create_book
+      create_book(book_attributes.merge(serial_number: 123_457))
+      create_book(book_attributes.merge(serial_number: 123_458))
+      Borrowing.create!(book: book, reader: reader, borrowed_at: Time.utc(2026, 10, 1), due_at: Time.utc(2026, 10, 31), returned_at: Time.utc(2026, 10, 2))
+      second_reader = Reader.create!(library_card_number: 654_322, full_name: "Grace Hopper", email: "grace@example.com")
+      Borrowing.create!(book: book, reader: second_reader, borrowed_at: Time.utc(2026, 11, 1), due_at: Time.utc(2026, 12, 1))
+
+      catalog_queries = []
+      ActiveSupport::Notifications.subscribed(->(_name, _started, _finished, _identifier, payload) { catalog_queries << payload if payload[:sql].start_with?("SELECT") && !payload[:cached] }, "sql.active_record") do
+        get "/books"
+      end
+      history_queries = []
+      ActiveSupport::Notifications.subscribed(->(_name, _started, _finished, _identifier, payload) { history_queries << payload if payload[:sql].start_with?("SELECT") && !payload[:cached] }, "sql.active_record") do
+        get "/books/#{book.serial_number}"
+      end
+
+      expect(catalog_queries.count).to eq(3)
+      expect(history_queries.count).to eq(4)
     end
 
     it "rejects invalid page parameters" do
