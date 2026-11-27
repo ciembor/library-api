@@ -110,3 +110,40 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/momentum_task_test
         run: bash bin/openapi-quality
+
+  deploy:
+    name: Deploy production
+    needs: [scan_ruby, lint, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H maciej-ciemborowicz.eu >> ~/.ssh/known_hosts
+
+      - name: Upload release
+        env:
+          RELEASE: ${{ github.sha }}
+        run: |
+          ssh ciembor@maciej-ciemborowicz.eu "mkdir -p ~/library-api-releases/$RELEASE"
+          rsync -az --delete \
+            --exclude .git \
+            --exclude log \
+            --exclude tmp \
+            ./ "ciembor@maciej-ciemborowicz.eu:~/library-api-releases/$RELEASE/"
+
+      - name: Activate release
+        env:
+          RELEASE: ${{ github.sha }}
+        run: ssh ciembor@maciej-ciemborowicz.eu "sudo /bin/bash ~/library-api-releases/$RELEASE/deploy/scripts/activate-release $RELEASE"

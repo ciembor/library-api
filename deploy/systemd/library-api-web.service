@@ -1,0 +1,16 @@
+[Unit]
+Description=Library API web
+Requires=library-api-postgres.service
+After=library-api-postgres.service
+
+[Service]
+EnvironmentFile=/etc/library-api/application.env
+EnvironmentFile=/etc/library-api/image.env
+ExecStartPre=-/usr/bin/podman rm -f library-api-web
+ExecStart=/usr/bin/podman run --rm --name library-api-web --network library-api -p 127.0.0.1:3002:3000 --env-file /etc/library-api/application.env ${LIBRARY_API_IMAGE} ./bin/rails server -b 0.0.0.0 -p 3000
+ExecStop=/usr/bin/podman stop --time 30 library-api-web
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

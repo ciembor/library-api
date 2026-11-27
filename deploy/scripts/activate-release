@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+release="$1"
+release_directory="/home/ciembor/library-api-releases/$release"
+application_directory="/opt/library-api"
+image="localhost/library-api:$release"
+
+test -d "$release_directory"
+test -f /etc/library-api/application.env
+
+install -d -m 0755 "$application_directory/releases" /etc/library-api /var/lib/library-api/postgres
+cp -a "$release_directory" "$application_directory/releases/$release"
+podman build --tag "$image" "$application_directory/releases/$release"
+ln -sfn "$application_directory/releases/$release" "$application_directory/current"
+printf 'LIBRARY_API_IMAGE=%s\n' "$image" > /etc/library-api/image.env
+
+install -m 0644 "$application_directory/current/deploy/systemd/library-api-postgres.service" /etc/systemd/system/
+install -m 0644 "$application_directory/current/deploy/systemd/library-api-web.service" /etc/systemd/system/
+install -m 0644 "$application_directory/current/deploy/systemd/library-api-worker.service" /etc/systemd/system/
+install -m 0644 "$application_directory/current/deploy/nginx/library-api.conf" /etc/nginx/snippets/
+bash "$application_directory/current/deploy/scripts/configure-nginx"
+
+systemctl daemon-reload
+systemctl enable library-api-postgres.service library-api-web.service library-api-worker.service
+systemctl start library-api-postgres.service
+systemctl restart library-api-web.service
+systemctl restart library-api-worker.service
+nginx -t
+systemctl reload nginx
+
+curl --fail --retry 12 --retry-delay 2 http://127.0.0.1:3002/up
+curl --fail --retry 12 --retry-delay 2 http://127.0.0.1:3002/api-docs/v1/swagger.yaml

@@ -66,6 +66,12 @@ The checked-in OpenAPI 3.1 contract is generated from executable Rswag request s
 bash bin/openapi-quality
 ```
 
+## Production deployment
+
+Pushing to `main` deploys after the `scan_ruby`, `lint`, and `test` jobs finish successfully. GitHub Actions uploads the immutable commit release to `maciej-ciemborowicz.eu`, builds a Podman image there, and restarts the application and Solid Queue worker through systemd. PostgreSQL data is stored outside releases at `/var/lib/library-api/postgres`, so image and release rebuilds do not remove it.
+
+The API is available at <https://maciej-ciemborowicz.eu/library-api/books> and the interactive OpenAPI documentation at <https://maciej-ciemborowicz.eu/library-api/api-docs>. The deployment needs the `DEPLOY_SSH_PRIVATE_KEY` repository secret. The corresponding public key must allow the `ciembor` account to connect to `maciej-ciemborowicz.eu`. The server keeps its production environment in `/etc/library-api/application.env`; create it once from `deploy/env/production.env.example`, replacing `DB_PASSWORD` with a long random value. This file is never uploaded from GitHub.
+
 ## Architecture diagrams
 
 `rails-erd` with `ruby-graphviz` generates the entity relationship diagram in UML notation from Active Record associations and `yard` generates the UML class diagram from Ruby source. The ERD labels each end of a relationship with its cardinality, for example `1`, `0..1`, and `0..*`. Both are development-only dependencies. Install Graphviz first (`brew install graphviz` on macOS or `apt-get install graphviz` on Debian/Ubuntu). Start the Compose database, then generate both SVG files against the test database:

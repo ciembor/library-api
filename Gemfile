@@ -32,6 +32,9 @@ gem "thruster", require: false
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
 
+# Serves the checked-in OpenAPI document and Swagger UI in every environment.
+gem "rswag"
+
 # Use Rack CORS for handling Cross-Origin Resource Sharing (CORS), making cross-origin Ajax possible
 # gem "rack-cors"
 
@@ -58,9 +61,6 @@ group :development, :test do
   # RSpec is used by Mutant's supported test integration.
   gem "rspec-rails", require: false
   gem "mutant-rspec", require: false
-
-  # Generates OpenAPI documentation from request specs.
-  gem "rswag"
 end
 
 group :development do

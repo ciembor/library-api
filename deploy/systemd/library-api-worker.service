@@ -1,0 +1,16 @@
+[Unit]
+Description=Library API worker
+Requires=library-api-web.service
+After=library-api-web.service
+
+[Service]
+EnvironmentFile=/etc/library-api/application.env
+EnvironmentFile=/etc/library-api/image.env
+ExecStartPre=-/usr/bin/podman rm -f library-api-worker
+ExecStart=/usr/bin/podman run --rm --name library-api-worker --network library-api --env-file /etc/library-api/application.env ${LIBRARY_API_IMAGE} ./bin/jobs start
+ExecStop=/usr/bin/podman stop --time 30 library-api-worker
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

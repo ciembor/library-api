@@ -95,9 +95,11 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: momentum_task_production
-    username: momentum_task
-    password: <%= ENV["MOMENTUM_TASK_DATABASE_PASSWORD"] %>
+    database: <%= ENV.fetch("POSTGRES_DB", "library_api_production") %>
+    host: <%= ENV.fetch("DB_HOST", "localhost") %>
+    port: <%= ENV.fetch("DB_PORT", 5432) %>
+    username: <%= ENV.fetch("DB_USER", "library_api") %>
+    password: <%= ENV["DB_PASSWORD"] %>
   cache:
     <<: *primary_production
     database: momentum_task_production_cache
