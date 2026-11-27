@@ -29,11 +29,11 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 ### 1. Szkielet aplikacji i uruchamianie
 
 - [x] Utworzyć aplikację Rails w trybie API z PostgreSQL oraz `Dockerfile` i `compose.yaml`.
-- [ ] W Compose uruchamiać bazę, aplikację i proces Solid Queue; aplikacja czeka na gotowość bazy i wykonuje migracje przed startem.
+- [x] W Compose uruchamiać bazę, aplikację i proces Solid Queue; aplikacja czeka na gotowość bazy i wykonuje migracje przed startem.
 - [x] Utrwalać dane PostgreSQL w named volume; przebudowa obrazu oraz odtworzenie kontenerów nie mogą usuwać danych.
 - [x] Przygotować `GET /up` jako kontrolę zdrowia.
-- [ ] Po przebudowie obrazu z aktualnym bundle sprawdzić dostępność Rswag UI pod `/api-docs` i wygenerowanej specyfikacji pod `/api-docs/v1/swagger.yaml`.
-- [ ] Dodać krótki `README.md`: `docker compose up`, adres API i OpenAPI UI, przykładowe żądania, uruchamianie testów i decyzje projektowe.
+- [x] Po przebudowie obrazu z aktualnym bundle sprawdzić dostępność Rswag UI pod `/api-docs` i wygenerowanej specyfikacji pod `/api-docs/v1/swagger.yaml`.
+- [x] Dodać krótki `README.md`: `docker compose up`, adres API i OpenAPI UI, przykładowe żądania, uruchamianie testów i decyzje projektowe.
 
 **Akceptacja:** świeży checkout po `docker compose up` uruchamia API bez ręcznych kroków; ponowny start nie niszczy danych.
 

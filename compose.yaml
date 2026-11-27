@@ -17,13 +17,47 @@ services:
     build: .
     command: ./bin/rails server -b 0.0.0.0 -p 3000
     depends_on:
+      setup:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://library:${POSTGRES_PASSWORD:-library}@db:5432/momentum_task_development
+      DB_HOST: db
+      DB_USER: library
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-library}
+      RAILS_ENV: development
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:3000/up"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "${APP_PORT:-3000}:3000"
+
+  worker:
+    build: .
+    command: ./bin/jobs start
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    environment:
+      DATABASE_URL: postgresql://library:${POSTGRES_PASSWORD:-library}@db:5432/momentum_task_development
+      DB_HOST: db
+      DB_USER: library
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-library}
+      RAILS_ENV: development
+
+  setup:
+    build: .
+    command: ./bin/rails db:prepare
+    depends_on:
       db:
         condition: service_healthy
     environment:
       DATABASE_URL: postgresql://library:${POSTGRES_PASSWORD:-library}@db:5432/momentum_task_development
+      DB_HOST: db
+      DB_USER: library
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-library}
       RAILS_ENV: development
-    ports:
-      - "${APP_PORT:-3000}:3000"
 
 volumes:
   postgres_data:

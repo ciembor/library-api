@@ -16,22 +16,13 @@ RSpec.configure do |config|
   # the root example_group in your specs, e.g. describe '...', openapi_spec: 'v2/swagger.json'
   config.openapi_specs = {
     'v1/swagger.yaml' => {
-      openapi: '3.0.1',
+      openapi: '3.1.0',
       info: {
-        title: 'API V1',
+        title: 'Library API',
         version: 'v1'
       },
       paths: {},
-      servers: [
-        {
-          url: 'https://{defaultHost}',
-          variables: {
-            defaultHost: {
-              default: 'www.example.com'
-            }
-          }
-        }
-      ]
+      servers: [ { url: '/' } ]
     }
   }
 

@@ -21,8 +21,16 @@ default: &default
 
 
 development:
-  <<: *default
-  database: momentum_task_development
+  primary:
+    <<: *default
+    database: momentum_task_development
+  queue:
+    <<: *default
+    database: momentum_task_development_queue
+    host: <%= ENV["DB_HOST"] %>
+    username: <%= ENV["DB_USER"] %>
+    password: <%= ENV["DB_PASSWORD"] %>
+    migrations_paths: db/queue_migrate
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
