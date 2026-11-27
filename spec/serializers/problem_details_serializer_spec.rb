@@ -19,4 +19,15 @@ RSpec.describe ProblemDetailsSerializer do
     )
     expect(serializer.render_options).to include(status: 422, content_type: "application/problem+json")
   end
+
+  it "uses about blank and omits field errors when they are not provided" do
+    serializer = described_class.new(status: :not_found, title: "Not found", detail: "The requested resource does not exist.")
+
+    expect(serializer.as_json).to eq(
+      type: "about:blank",
+      status: 404,
+      title: "Not found",
+      detail: "The requested resource does not exist."
+    )
+  end
 end

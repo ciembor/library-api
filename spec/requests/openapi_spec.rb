@@ -41,7 +41,15 @@ RSpec.describe "Library API", openapi_spec: "v1/swagger.yaml", type: :request do
         before { Book.create!(serial_number: 123_456, title: "Dune", author: "Frank Herbert") }
         schema type: :object, required: %w[data meta], properties: {
           data: { type: :array, items: { "$ref" => "#/components/schemas/book" } },
-          meta: { type: :object, required: %w[page per_page total] }
+          meta: {
+            type: :object,
+            required: %w[page per_page total],
+            properties: {
+              page: { type: :integer, minimum: 1 },
+              per_page: { type: :integer, minimum: 1, maximum: 100 },
+              total: { type: :integer, minimum: 0 }
+            }
+          }
         }
 
         run_test!
@@ -70,7 +78,12 @@ RSpec.describe "Library API", openapi_spec: "v1/swagger.yaml", type: :request do
           borrowed_at = Time.current
           Borrowing.create!(book: book, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days)
         end
-        schema ENVELOPE.call(type: :object, allOf: [ { "$ref" => "#/components/schemas/book" } ], properties: { borrowings: { type: :array, items: { "$ref" => "#/components/schemas/borrowing" } } })
+        schema ENVELOPE.call(
+          type: :object,
+          allOf: [ { "$ref" => "#/components/schemas/book" } ],
+          required: [ "borrowings" ],
+          properties: { borrowings: { type: :array, items: { "$ref" => "#/components/schemas/borrowing" } } }
+        )
 
         run_test!
       end

@@ -12,8 +12,19 @@ RSpec.describe BookSerializer do
   it "serializes borrowing history with reader data" do
     borrowing = Borrowing.create!(book: book, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days)
 
-    expect(described_class.new(book, borrowings: [ borrowing ]).as_json).to include(
-      borrowings: [ include(borrowed_at: borrowed_at, due_at: borrowed_at + 30.days, returned_at: nil, reader: ReaderSerializer.new(reader).as_json) ]
+    expect(described_class.new(book, borrowings: [ borrowing ]).as_json).to eq(
+      serial_number: 123_456,
+      title: "Dune",
+      author: "Frank Herbert",
+      status: "borrowed",
+      borrowings: [
+        {
+          borrowed_at: borrowed_at,
+          due_at: borrowed_at + 30.days,
+          returned_at: nil,
+          reader: { library_card_number: 654_321, full_name: "Ada Lovelace", email: "ada@example.com" }
+        }
+      ]
     )
   end
 end

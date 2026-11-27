@@ -212,6 +212,7 @@ RSpec.describe "Books API", type: :request do
     it "returns not found for an unknown book" do
       get "/books/999999"
       expect_problem(:not_found, "Not found")
+      expect(json).not_to have_key("errors")
     end
 
     it "rejects malformed book identifiers" do
