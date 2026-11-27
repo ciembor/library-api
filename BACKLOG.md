@@ -49,14 +49,14 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 ### 3. Książki i czytelnicy
 
-- [ ] `POST /books` — dodać książkę; zwrócić `201` i jej dane.
-- [ ] `GET /books` — lista niearchiwalnych książek z polem `status: available|borrowed`; dodać prostą paginację i uniknąć zapytania do bazy osobno dla każdej pozycji.
-- [ ] `GET /books/:serial_number` — dane książki, status i pełna historia wypożyczeń, od najnowszego: data wypożyczenia, termin zwrotu, data zwrotu i dane czytelnika.
-- [ ] `DELETE /books/:serial_number` — archiwizować książkę i zwrócić `204`; odrzucić próbę archiwizacji wypożyczonej książki (`409`). Historia pozostaje w bazie, a numer seryjny nie jest ponownie używany.
-- [ ] `POST /readers` — rejestracja czytelnika, aby wypożyczenie mogło wskazać istniejący numer karty.
-- [ ] `GET /readers/:library_card_number` — odszukać czytelnika po numerze karty; brak rekordu zwraca `404`.
-- [ ] Wysyłać odpowiedzi sukcesu z treścią jako `application/json`; `DELETE` z kodem `204` nie ma treści, a techniczny `GET /up` nie należy do kontraktu JSON API.
-- [ ] Zdefiniować spójne błędy zgodne z RFC 9457 (`application/problem+json`) dla `400/404/409/422`: `type`, `title`, `status`, `detail` i opcjonalny `errors` dla pól.
+- [x] `POST /books` — dodać książkę; zwrócić `201` i jej dane.
+- [x] `GET /books` — lista niearchiwalnych książek z polem `status: available|borrowed`; dodać prostą paginację i uniknąć zapytania do bazy osobno dla każdej pozycji.
+- [x] `GET /books/:serial_number` — dane książki, status i pełna historia wypożyczeń, od najnowszego: data wypożyczenia, termin zwrotu, data zwrotu i dane czytelnika.
+- [x] `DELETE /books/:serial_number` — archiwizować książkę i zwrócić `204`; odrzucić próbę archiwizacji wypożyczonej książki (`409`). Historia pozostaje w bazie, a numer seryjny nie jest ponownie używany.
+- [x] `POST /readers` — rejestracja czytelnika, aby wypożyczenie mogło wskazać istniejący numer karty.
+- [x] `GET /readers/:library_card_number` — odszukać czytelnika po numerze karty; brak rekordu zwraca `404`.
+- [x] Wysyłać odpowiedzi sukcesu z treścią jako `application/json`; `DELETE` z kodem `204` nie ma treści, a techniczny `GET /up` nie należy do kontraktu JSON API.
+- [x] Zdefiniować spójne błędy zgodne z RFC 9457 (`application/problem+json`) dla `400/404/409/422`: `type`, `title`, `status`, `detail` i opcjonalny `errors` dla pól.
 
 **Akceptacja:** pracownik może dodać i odszukać książkę oraz czytelnika; lista pokazuje dostępność; szczegóły pokazują całą historię; archiwalna książka znika z listy, a jej historia pozostaje zachowana.
 

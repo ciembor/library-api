@@ -1,6 +1,6 @@
 # Library API
 
-Ruby on Rails 8 API-only application for a library recruitment task. The repository currently contains the running stack and the library data model. HTTP endpoints for books, readers, and borrowings are planned in [BACKLOG.md](BACKLOG.md).
+Ruby on Rails 8 API-only application for a library recruitment task. The repository currently contains the running stack, library catalog, reader registry, and read-only borrowing history. Borrowing and return operations are planned in [BACKLOG.md](BACKLOG.md).
 
 ## Start
 
@@ -14,14 +14,24 @@ If port 3000 is occupied, use `APP_PORT=3001 docker compose up --build` and repl
 
 ## Example requests
 
-The current HTTP surface exposes a health endpoint and documentation:
+The current HTTP surface exposes a health endpoint, API documentation, books, and readers:
 
 ```bash
 curl -i http://localhost:3000/up
 curl -i http://localhost:3000/api-docs/v1/swagger.yaml
+curl -X POST http://localhost:3000/books \
+  -H 'Content-Type: application/json' \
+  -d '{"book":{"serial_number":123456,"title":"Dune","author":"Frank Herbert"}}'
+curl -X POST http://localhost:3000/readers \
+  -H 'Content-Type: application/json' \
+  -d '{"reader":{"library_card_number":654321,"full_name":"Ada Lovelace","email":"ada@example.com"}}'
+curl 'http://localhost:3000/books?page=1&per_page=20'
+curl http://localhost:3000/books/123456
+curl -X DELETE -i http://localhost:3000/books/123456
+curl http://localhost:3000/readers/654321
 ```
 
-`GET /up` returns HTTP 200 when Rails starts successfully. The OpenAPI file currently has no library operations; request examples for books, readers, and borrowings will be added with their endpoints.
+`GET /up` returns HTTP 200 when Rails starts successfully. `POST /books` and `POST /readers` return `201`; `GET /books` returns only non-archived books and paginates with `page` and `per_page` (default 20, maximum 100). `GET /books/:serial_number` returns the borrowing history from newest to oldest. `DELETE /books/:serial_number` archives an available book with `204`; it returns `409` for a borrowed book. Successful responses use `application/json`. Errors use RFC 9457 `application/problem+json` with `type`, `title`, `status`, `detail`, and field-level `errors` where applicable.
 
 ## Tests and quality gate
 
