@@ -6,19 +6,26 @@ class ReminderDelivery
   end
 
   def deliver
-    reminder = BorrowingReminder.create!(borrowing: @borrowing, kind: @kind, payload: payload, sent_at: Time.current)
-    Rails.logger.info(reminder.payload.to_json)
-    reminder
+    create_reminder.tap { |reminder| Rails.logger.info(reminder.payload.to_json) if reminder }
   rescue ActiveRecord::RecordNotUnique
     nil
   end
 
   private
 
-  def payload
-    message = BorrowingReminderMailer.reminder(@borrowing, @kind).message
-    book = @borrowing.book
-    { to: message.to.first, subject: message.subject, body: message.body.decoded, reader: ReaderSerializer.new(@borrowing.reader).as_json,
-      book: { serial_number: book.serial_number, title: book.title }, due_at: @borrowing.due_at.iso8601, kind: @kind }
+  def create_reminder
+    Book.transaction { create_reminder_for_active_borrowing }
+  end
+
+  def create_reminder_for_active_borrowing
+    borrowing = locked_borrowing
+    return if borrowing.returned_at?
+
+    payload = BorrowingReminderPayloadSerializer.new(borrowing, @kind).as_json
+    BorrowingReminder.create!(borrowing: borrowing, kind: @kind, payload: payload, sent_at: Time.current)
+  end
+
+  def locked_borrowing
+    Book.lock.find(@borrowing.book_id).borrowings.includes(:reader).find(@borrowing.id)
   end
 end

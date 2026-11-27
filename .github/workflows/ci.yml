@@ -98,6 +98,13 @@ jobs:
           # REDIS_URL: redis://localhost:6379/0
         run: bin/quality
 
+      - name: Verify mutation coverage
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/momentum_task_test
+          MUTANT_JOBS: 4
+        run: bin/mutation-quality
+
       - name: Generate and verify OpenAPI 3.1 contract
         env:
           RAILS_ENV: test

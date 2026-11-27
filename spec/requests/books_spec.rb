@@ -90,6 +90,15 @@ RSpec.describe "Books API", type: :request do
       get "/books", params: { page: "invalid" }
       expect_problem(:bad_request, "Bad request")
     end
+
+    it "rejects non-scalar, empty, negative, fractional, and excessive page values" do
+      [ { page: [] }, { page: "" }, { page: -1 }, { page: "1.5" }, { page: 1_000_001 },
+        { per_page: [] }, { per_page: "" }, { per_page: -1 }, { per_page: "1.5" } ].each do |params|
+        get "/books", params: params
+
+        expect_problem(:bad_request, "Bad request")
+      end
+    end
   end
 
   describe "GET /books/:serial_number" do
@@ -112,6 +121,25 @@ RSpec.describe "Books API", type: :request do
     it "returns not found for an unknown book" do
       get "/books/999999"
       expect_problem(:not_found, "Not found")
+    end
+  end
+
+  describe "invalid request payloads" do
+    it "returns a client error without creating a book for malformed book structures" do
+      [ nil, [], "book", 123_456 ].each do |book|
+        post "/books", params: { book: book }, as: :json
+
+        expect_problem(:bad_request, "Bad request")
+      end
+
+      expect(Book.count).to eq(0)
+    end
+
+    it "does not allow clients to set protected book attributes" do
+      post "/books", params: { book: book_attributes.merge(archived_at: Time.current, status: "borrowed") }, as: :json
+
+      expect(response).to have_http_status(:created)
+      expect(Book.last).to have_attributes(archived_at: nil, status: "available")
     end
   end
 

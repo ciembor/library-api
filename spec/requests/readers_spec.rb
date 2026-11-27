@@ -34,6 +34,27 @@ RSpec.describe "Readers API", type: :request do
 
       expect_problem(:bad_request, "Bad request")
     end
+
+    it "returns a client error for malformed reader structures" do
+      [ nil, [], "reader", 123_456 ].each do |reader|
+        post "/readers", params: { reader: reader }, as: :json
+
+        expect_problem(:bad_request, "Bad request")
+      end
+
+      expect(Reader.count).to eq(0)
+    end
+
+    it "rejects duplicate card numbers and email addresses without creating another reader" do
+      Reader.create!(reader_attributes)
+
+      post "/readers", params: { reader: reader_attributes.merge(email: "other@example.com") }, as: :json
+      expect_problem(:unprocessable_content, "Validation failed")
+
+      post "/readers", params: { reader: reader_attributes.merge(library_card_number: 654_321, email: "ADA@example.com") }, as: :json
+      expect_problem(:unprocessable_content, "Validation failed")
+      expect(Reader.count).to eq(1)
+    end
   end
 
   describe "GET /readers/:library_card_number" do

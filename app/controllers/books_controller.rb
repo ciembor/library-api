@@ -2,6 +2,7 @@
 class BooksController < ApplicationController
   DEFAULT_PER_PAGE = 20
   MAX_PER_PAGE = 100
+  MAX_PAGE = 1_000_000
 
   def create
     book = Book.new(book_params)
@@ -11,7 +12,7 @@ class BooksController < ApplicationController
   end
 
   def index
-    pagination = PaginationParameters.new(params, default_per_page: DEFAULT_PER_PAGE, maximum_per_page: MAX_PER_PAGE)
+    pagination = PaginationParameters.new(params, default_per_page: DEFAULT_PER_PAGE, maximum_per_page: MAX_PER_PAGE, maximum_page: MAX_PAGE)
     return render_bad_request(pagination.error_detail) unless pagination.valid?
 
     books = Book.where(archived_at: nil).includes(:active_borrowing).order(:serial_number)
@@ -25,17 +26,14 @@ class BooksController < ApplicationController
   end
 
   def destroy
-    book = find_book
-    return render_conflict("A borrowed book cannot be archived.") if book.active_borrowing
-
-    book.update!(archived_at: Time.current) unless book.archived_at?
+    ArchiveBook.new(serial_number: params[:serial_number]).call
     head :no_content
   end
 
   private
 
   def book_params
-    params.require(:book).permit(:serial_number, :title, :author)
+    permitted_object(:book, :serial_number, :title, :author)
   end
 
   def find_book

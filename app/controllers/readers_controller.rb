@@ -15,6 +15,6 @@ class ReadersController < ApplicationController
   private
 
   def reader_params
-    params.require(:reader).permit(:library_card_number, :full_name, :email)
+    permitted_object(:reader, :library_card_number, :full_name, :email)
   end
 end

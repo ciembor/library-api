@@ -7,5 +7,7 @@ export DATABASE_URL="${DATABASE_URL:-postgresql://library:${POSTGRES_PASSWORD:-l
 bundle exec rails db:prepare
 SIMPLECOV_ENABLED=false OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES bundle exec mutant run \
   --usage opensource --integration rspec --require ./config/environment --jobs "${MUTANT_JOBS:-4}" \
-  "Book#status" "Borrowing#due_at_matches_borrowed_at" "Borrowing#returned_at_follows_borrowed_at" \
-  "BorrowBook#call" "ReturnBook#call"
+  "Book#status" "BorrowingTimestampConstraints#validate" "BorrowingTimestampsValidator#validate" \
+  "PaginationParameters#valid?" "PaginationParameters#error_detail" \
+  "BorrowBook#call" "ReturnBook#call" "BorrowingReminderScheduler#schedule" \
+  "ReminderDelivery#deliver" "SendBorrowingReminderJob#perform"

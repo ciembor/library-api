@@ -8,6 +8,6 @@ class BorrowingsController < ApplicationController
   private
 
   def borrowing_params
-    params.require(:borrowing).permit(:library_card_number)
+    permitted_object(:borrowing, :library_card_number)
   end
 end
