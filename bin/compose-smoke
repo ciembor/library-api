@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_name="library_api_smoke_$RANDOM"
+app_port="${SMOKE_APP_PORT:-3005}"
+db_port="${SMOKE_DB_PORT:-$((20000 + RANDOM % 10000))}"
+compose=(docker compose --project-name "$project_name")
+
+export APP_PORT="$app_port"
+export DB_PORT="$db_port"
+
+cleanup() {
+  "${compose[@]}" down --volumes --remove-orphans
+}
+trap cleanup EXIT
+
+wait_for_api() {
+  for _ in {1..30}; do
+    curl --fail --silent --show-error "http://localhost:$app_port/up" >/dev/null && return
+    sleep 1
+  done
+
+  return 1
+}
+
+wait_for_reminder() {
+  for _ in {1..30}; do
+    "${compose[@]}" exec --no-TTY web ./bin/rails runner \
+      'exit(BorrowingReminder.exists?(kind: "three_days_before") ? 0 : 1)' && return
+    sleep 1
+  done
+
+  return 1
+}
+
+"${compose[@]}" up --detach --build
+wait_for_api
+
+curl --fail --silent --show-error --request POST "http://localhost:$app_port/readers" \
+  --header 'Content-Type: application/json' \
+  --data '{"reader":{"library_card_number":654321,"full_name":"Ada Lovelace","email":"ada@example.com"}}' >/dev/null
+curl --fail --silent --show-error --request POST "http://localhost:$app_port/books" \
+  --header 'Content-Type: application/json' \
+  --data '{"book":{"serial_number":123456,"title":"Dune","author":"Frank Herbert"}}' >/dev/null
+curl --fail --silent --show-error --request POST "http://localhost:$app_port/books/123456/borrowings" \
+  --header 'Content-Type: application/json' \
+  --data '{"borrowing":{"library_card_number":654321}}' >/dev/null
+
+"${compose[@]}" stop worker
+"${compose[@]}" exec --no-TTY web ./bin/rails runner '
+  schedule = BorrowingReminderSchedule.find_by!(kind: "three_days_before")
+  schedule.update!(scheduled_at: Time.current, enqueued_at: nil)
+  EnqueuePendingBorrowingRemindersJob.perform_now
+'
+"${compose[@]}" up --detach --force-recreate worker
+wait_for_reminder
+
+"${compose[@]}" build web worker
+"${compose[@]}" up --detach --force-recreate web worker
+wait_for_api
+
+curl --fail --silent --show-error "http://localhost:$app_port/books/123456" | \
+  grep --quiet '"title":"Dune".*"borrowings":\['
+"${compose[@]}" ps --status running worker | grep --quiet 'worker'
+curl --fail --silent --show-error "http://localhost:$app_port/api-docs/v1/swagger.yaml" >/dev/null

@@ -12,6 +12,8 @@ Compose waits for PostgreSQL, prepares the application and queue databases, then
 
 If port 3000 is occupied, use `APP_PORT=3001 docker compose up --build` and replace `3000` with `3001` in the examples. PostgreSQL is also available to local tests at `127.0.0.1:5433` (`DB_PORT` changes this port). The queue database and application database live in PostgreSQL's named `postgres_data` volume. `docker compose down` and rebuilding images preserve data. `docker compose down --volumes` removes it intentionally.
 
+Run `bin/compose-smoke` to verify this behavior in a separately named Compose project. It creates a reader, a book, and a borrowing; persists an enqueued reminder while the worker is stopped; recreates the worker and application containers; then confirms the reminder, borrowing history, API, and OpenAPI document remain available. The script removes only its own project and volume on exit. Set `SMOKE_APP_PORT` if port 3005 is occupied.
+
 ## Example requests
 
 The current HTTP surface exposes a health endpoint, API documentation, books, and readers:
