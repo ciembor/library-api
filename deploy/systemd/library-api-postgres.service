@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 EnvironmentFile=/etc/library-api/application.env
-ExecStartPre=/usr/bin/podman network exists library-api || /usr/bin/podman network create library-api
+ExecStartPre=/bin/sh -c '/usr/bin/podman network exists library-api || /usr/bin/podman network create library-api'
 ExecStartPre=/usr/bin/mkdir -p /var/lib/library-api/postgres
 ExecStartPre=-/usr/bin/podman rm -f library-api-postgres
 ExecStart=/usr/bin/podman run --rm --name library-api-postgres --network library-api -v /var/lib/library-api/postgres:/var/lib/postgresql/data:Z -e POSTGRES_DB=${POSTGRES_DB} -e POSTGRES_USER=${DB_USER} -e POSTGRES_PASSWORD=${DB_PASSWORD} docker.io/library/postgres:17-alpine
