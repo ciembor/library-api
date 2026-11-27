@@ -91,9 +91,18 @@ RSpec.describe "Books API", type: :request do
       expect_problem(:bad_request, "Bad request")
     end
 
-    it "rejects non-scalar, empty, negative, fractional, and excessive page values" do
-      [ { page: [] }, { page: "" }, { page: -1 }, { page: "1.5" }, { page: 1_000_001 },
-        { per_page: [] }, { per_page: "" }, { per_page: -1 }, { per_page: "1.5" } ].each do |params|
+    it "accepts pagination boundaries" do
+      get "/books", params: { page: 1, per_page: 1 }
+      expect(response).to have_http_status(:ok)
+
+      get "/books", params: { page: 1_000_000, per_page: 100 }
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "rejects malformed, non-scalar, and excessive pagination values" do
+      [ { page: [] }, { page: { value: 1 } }, { page: "" }, { page: nil }, { page: -1 }, { page: "1.5" }, { page: "01" }, { page: "+1" }, { page: 1_000_001 },
+        { per_page: [] }, { per_page: { value: 1 } }, { per_page: "" }, { per_page: nil }, { per_page: -1 }, { per_page: "1.5" }, { per_page: "01" }, { per_page: "+1" }, { per_page: 101 },
+        { page: 0, per_page: 0 } ].each do |params|
         get "/books", params: params
 
         expect_problem(:bad_request, "Bad request")
