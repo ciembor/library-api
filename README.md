@@ -27,11 +27,15 @@ curl -X POST http://localhost:3000/readers \
   -d '{"reader":{"library_card_number":654321,"full_name":"Ada Lovelace","email":"ada@example.com"}}'
 curl 'http://localhost:3000/books?page=1&per_page=20'
 curl http://localhost:3000/books/123456
+curl -X POST http://localhost:3000/books/123456/borrowings \
+  -H 'Content-Type: application/json' \
+  -d '{"borrowing":{"library_card_number":654321}}'
+curl -X POST http://localhost:3000/books/123456/returns
 curl -X DELETE -i http://localhost:3000/books/123456
 curl http://localhost:3000/readers/654321
 ```
 
-`GET /up` returns HTTP 200 when Rails starts successfully. `POST /books` and `POST /readers` return `201`; `GET /books` returns only non-archived books and paginates with `page` and `per_page` (default 20, maximum 100). `GET /books/:serial_number` returns the borrowing history from newest to oldest. `DELETE /books/:serial_number` archives an available book with `204`; it returns `409` for a borrowed book. Successful responses use `application/json`. Errors use RFC 9457 `application/problem+json` with `type`, `title`, `status`, `detail`, and field-level `errors` where applicable.
+`GET /up` returns HTTP 200 when Rails starts successfully. `POST /books` and `POST /readers` return `201`; `GET /books` returns only non-archived books and paginates with `page` and `per_page` (default 20, maximum 100). `GET /books/:serial_number` returns the borrowing history from newest to oldest. `POST /books/:serial_number/borrowings` creates a 30-day borrowing, and `POST /books/:serial_number/returns` closes the active borrowing. Both state transitions lock the book row and return `409` for an invalid state. `DELETE /books/:serial_number` archives an available book with `204`; it returns `409` for a borrowed book. Successful responses use `application/json`. Errors use RFC 9457 `application/problem+json` with `type`, `title`, `status`, `detail`, and field-level `errors` where applicable.
 
 ## Tests and quality gate
 

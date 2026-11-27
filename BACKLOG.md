@@ -62,11 +62,11 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 ### 4. Wypożyczenie i zwrot
 
-- [ ] `POST /books/:serial_number/borrowings` z `library_card_number` — utworzyć wypożyczenie dla istniejącego czytelnika; zwrócić `201` z `borrowed_at` i `due_at`.
-- [ ] `POST /books/:serial_number/returns` — zamknąć bieżące wypożyczenie i zwrócić `200` z `returned_at`.
-- [ ] Operacje zmiany stanu umieścić w małych obiektach `BorrowBook` i `ReturnBook`; kontrolery obsługują żądanie i odpowiedź, modele pilnują własnych danych, a baza chroni reguły integralności.
-- [ ] Zabezpieczyć oba przejścia transakcją i blokadą wiersza książki; dla równoległych prób zachować jeden wynik sukcesu, a pozostałe zwracać jako `409`.
-- [ ] Odrzucać wypożyczenie już wypożyczonej lub archiwalnej książki oraz zwrot książki dostępnej (`409`).
+- [x] `POST /books/:serial_number/borrowings` z `library_card_number` — utworzyć wypożyczenie dla istniejącego czytelnika; zwrócić `201` z `borrowed_at` i `due_at`.
+- [x] `POST /books/:serial_number/returns` — zamknąć bieżące wypożyczenie i zwrócić `200` z `returned_at`.
+- [x] Operacje zmiany stanu umieścić w małych obiektach `BorrowBook` i `ReturnBook`; kontrolery obsługują żądanie i odpowiedź, modele pilnują własnych danych, a baza chroni reguły integralności.
+- [x] Zabezpieczyć oba przejścia transakcją i blokadą wiersza książki; dla równoległych prób zachować jeden wynik sukcesu, a pozostałe zwracać jako `409`.
+- [x] Odrzucać wypożyczenie już wypożyczonej lub archiwalnej książki oraz zwrot książki dostępnej (`409`).
 
 **Akceptacja:** cykl dostępna → wypożyczona → dostępna działa, historia nie jest nadpisywana, a równoległe żądania nie tworzą dwóch aktywnych wypożyczeń.
 

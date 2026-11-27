@@ -138,4 +138,71 @@ RSpec.describe "Books API", type: :request do
       expect(book.reload.archived_at).to be_nil
     end
   end
+
+  describe "POST /books/:serial_number/borrowings" do
+    it "borrows an available book" do
+      book = create_book
+      borrowed_at = Time.current
+
+      post "/books/#{book.serial_number}/borrowings", params: { borrowing: { library_card_number: reader.library_card_number } }, as: :json
+
+      borrowing = Borrowing.find_by!(book: book)
+      expect(response).to have_http_status(:created)
+      expect(response.media_type).to eq("application/json")
+      expect(json).to eq("data" => { "borrowed_at" => borrowing.borrowed_at.as_json, "due_at" => borrowing.due_at.as_json })
+      expect(borrowing).to have_attributes(reader: reader, due_at: be_within(1.second).of(borrowed_at + 30.days))
+    end
+
+    it "returns a bad request when borrowing data is missing" do
+      post "/books/#{book_attributes[:serial_number]}/borrowings", params: {}, as: :json
+
+      expect_problem(:bad_request, "Bad request")
+    end
+
+    it "returns not found for an unknown book or reader" do
+      post "/books/999999/borrowings", params: { borrowing: { library_card_number: reader.library_card_number } }, as: :json
+      expect_problem(:not_found, "Not found")
+
+      create_book
+      post "/books/#{book_attributes[:serial_number]}/borrowings", params: { borrowing: { library_card_number: 999_999 } }, as: :json
+      expect_problem(:not_found, "Not found")
+    end
+
+    it "rejects archived and borrowed books" do
+      archived = create_book(book_attributes.merge(archived_at: Time.current))
+      post "/books/#{archived.serial_number}/borrowings", params: { borrowing: { library_card_number: reader.library_card_number } }, as: :json
+      expect_problem(:conflict, "Conflict")
+
+      available = create_book(book_attributes.merge(serial_number: 123_457))
+      borrowed_at = Time.current
+      Borrowing.create!(book: available, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days)
+      post "/books/#{available.serial_number}/borrowings", params: { borrowing: { library_card_number: reader.library_card_number } }, as: :json
+      expect_problem(:conflict, "Conflict")
+    end
+  end
+
+  describe "POST /books/:serial_number/returns" do
+    it "returns a borrowed book and preserves its history" do
+      book = create_book
+      borrowed_at = Time.current
+      borrowing = Borrowing.create!(book: book, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days)
+
+      post "/books/#{book.serial_number}/returns", as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("application/json")
+      expect(json).to eq("data" => { "returned_at" => borrowing.reload.returned_at.as_json })
+      expect(Borrowing.where(book: book).count).to eq(1)
+      expect(book.reload.status).to eq("available")
+    end
+
+    it "returns conflicts for an available book and not found for an unknown book" do
+      book = create_book
+      post "/books/#{book.serial_number}/returns", as: :json
+      expect_problem(:conflict, "Conflict")
+
+      post "/books/999999/returns", as: :json
+      expect_problem(:not_found, "Not found")
+    end
+  end
 end

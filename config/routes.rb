@@ -2,7 +2,10 @@ Rails.application.routes.draw do
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
-  resources :books, only: %i[create index show destroy], param: :serial_number
+  resources :books, only: %i[create index show destroy], param: :serial_number do
+    resources :borrowings, only: :create
+    post :returns, to: "returns#create"
+  end
   resources :readers, only: %i[create show], param: :library_card_number
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

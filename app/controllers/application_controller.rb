@@ -3,6 +3,7 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
   rescue_from ActiveRecord::RecordNotUnique, with: :render_record_not_unique
   rescue_from ActionController::ParameterMissing, with: :render_parameter_missing
+  rescue_from BorrowingConflict, with: :render_borrowing_conflict
 
   private
 
@@ -19,6 +20,10 @@ class ApplicationController < ActionController::API
 
   def render_conflict(detail)
     render_problem(type: "about:blank", status: :conflict, title: "Conflict", detail: detail)
+  end
+
+  def render_borrowing_conflict(error)
+    render_conflict(error.message)
   end
 
   def render_not_found
