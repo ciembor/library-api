@@ -1,6 +1,6 @@
 # Library API
 
-Ruby on Rails 8 API-only application for a library recruitment task. This repository currently contains milestone 1: the running application, PostgreSQL, Solid Queue worker, and OpenAPI preview. Book and borrowing endpoints are planned in [BACKLOG.md](BACKLOG.md).
+Ruby on Rails 8 API-only application for a library recruitment task. The repository currently contains the running stack and the library data model. HTTP endpoints for books, readers, and borrowings are planned in [BACKLOG.md](BACKLOG.md).
 
 ## Start
 
@@ -10,11 +10,11 @@ docker compose up --build
 
 Compose waits for PostgreSQL, prepares the application and queue databases, then starts the API and Solid Queue worker. No manual migration step is needed. The API is at <http://localhost:3000>, the OpenAPI UI at <http://localhost:3000/api-docs>, and the generated specification at <http://localhost:3000/api-docs/v1/swagger.yaml>.
 
-If port 3000 is occupied, use `APP_PORT=3001 docker compose up --build` and replace `3000` with `3001` in the examples. The queue database and application database live in PostgreSQL's named `postgres_data` volume. `docker compose down` and rebuilding images preserve data. `docker compose down --volumes` removes it intentionally.
+If port 3000 is occupied, use `APP_PORT=3001 docker compose up --build` and replace `3000` with `3001` in the examples. PostgreSQL is also available to local tests at `127.0.0.1:5433` (`DB_PORT` changes this port). The queue database and application database live in PostgreSQL's named `postgres_data` volume. `docker compose down` and rebuilding images preserve data. `docker compose down --volumes` removes it intentionally.
 
 ## Example requests
 
-The current milestone exposes a health endpoint and documentation:
+The current HTTP surface exposes a health endpoint and documentation:
 
 ```bash
 curl -i http://localhost:3000/up
@@ -25,19 +25,19 @@ curl -i http://localhost:3000/api-docs/v1/swagger.yaml
 
 ## Tests and quality gate
 
-With Ruby 3.4.8 and the project bundle installed, run:
+With Ruby 3.4.8, the project bundle, and the Compose database running, run:
 
 ```bash
 bundle install
+docker compose up -d db
 bin/quality
 ```
 
-The gate runs RuboCop with autocorrection, Reek, RSpec with 100% line and branch coverage for `app/`, and Mutant in that order. The local pre-commit hook runs the same gate. Mutant currently has no domain methods to mutate; later milestones must add mutation subjects and killing specs.
+The gate runs RuboCop with autocorrection, Reek, test database preparation, RSpec with 100% line and branch coverage for `app/`, and Mutant in that order. The local pre-commit hook runs the same gate. Mutant currently tests three domain methods and requires every generated mutation to be killed. Reek excludes Rails migration DSL files; application and test code remain checked.
 
 To run the gate inside Docker against a separate test database:
 
 ```bash
-docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgresql://library:library@db:5432/momentum_task_test web ./bin/rails db:prepare
 docker compose run --rm -e RAILS_ENV=test -e DATABASE_URL=postgresql://library:library@db:5432/momentum_task_test web bin/quality
 ```
 
@@ -54,4 +54,5 @@ SIMPLECOV_ENABLED=false bundle exec rake rswag:specs:swaggerize
 - PostgreSQL is the source of truth. A separate database in the same server holds Solid Queue's tables, keeping job storage apart from library data.
 - A one-shot Compose setup service prepares both databases before web and worker start. Repeated runs are safe.
 - Rswag serves a checked-in OpenAPI 3.1 document. Its library operations will be generated from request specs as they are implemented.
+- Books and readers use six-digit integer identifiers with database checks and unique indexes. Reader email uniqueness is case-insensitive. Borrowing history is retained; a partial unique index allows at most one active borrowing per book. The due date is exactly 30 days after borrowing.
 - There is no authentication or real email delivery in the task scope. The API contract and reminder payloads are tracked in the backlog.

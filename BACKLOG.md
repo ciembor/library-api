@@ -39,11 +39,11 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 ### 2. Schemat danych i reguły integralności
 
-- [ ] Dodać `books`: sześciocyfrowy `serial_number` (unikalny), niepusty `title`, niepusty `author`, opcjonalny `archived_at`.
-- [ ] Dodać `readers`: sześciocyfrowy `library_card_number` (unikalny), niepusty `full_name`, unikalny adres `email` porównywany bez względu na wielkość liter.
-- [ ] Dodać `borrowings`: klucze obce do książki i czytelnika, `borrowed_at`, `due_at`, opcjonalny `returned_at`.
-- [ ] W bazie i modelach wymusić format identyfikatorów, wymagane pola, unikalność oraz `due_at = borrowed_at + 30 dni` na poziomie operacji wypożyczenia.
-- [ ] Dodać częściowy unikalny indeks: jedna pozycja z `returned_at IS NULL` na książkę. Status książki wyliczać z aktywnego wypożyczenia, bez osobnej kolumny `status`.
+- [x] Dodać `books`: sześciocyfrowy `serial_number` (unikalny), niepusty `title`, niepusty `author`, opcjonalny `archived_at`.
+- [x] Dodać `readers`: sześciocyfrowy `library_card_number` (unikalny), niepusty `full_name`, unikalny adres `email` porównywany bez względu na wielkość liter.
+- [x] Dodać `borrowings`: klucze obce do książki i czytelnika, `borrowed_at`, `due_at`, opcjonalny `returned_at`.
+- [x] W bazie i modelach wymusić format identyfikatorów, wymagane pola, unikalność oraz `due_at = borrowed_at + 30 dni` na poziomie operacji wypożyczenia.
+- [x] Dodać częściowy unikalny indeks: jedna pozycja z `returned_at IS NULL` na książkę. Status książki wyliczać z aktywnego wypożyczenia, bez osobnej kolumny `status`.
 
 **Akceptacja:** baza nie dopuszcza dwóch aktywnych wypożyczeń tej samej książki ani duplikatów numerów i adresów email.
 
