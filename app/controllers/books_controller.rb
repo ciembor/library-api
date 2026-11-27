@@ -21,7 +21,7 @@ class BooksController < ApplicationController
 
   def show
     book = find_book
-    borrowings = book.borrowings.includes(:reader).order(borrowed_at: :desc)
+    borrowings = book.borrowings.includes(:reader).order(borrowed_at: :desc, id: :desc)
     render json: { data: BookSerializer.new(book, borrowings: borrowings).as_json }
   end
 

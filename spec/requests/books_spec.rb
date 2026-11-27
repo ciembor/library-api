@@ -120,6 +120,15 @@ RSpec.describe "Books API", type: :request do
   end
 
   describe "GET /books/:serial_number" do
+    it "returns an empty history for a book that has not been borrowed" do
+      book = create_book
+
+      get "/books/#{book.serial_number}"
+
+      expect(response).to have_http_status(:ok)
+      expect(json.dig("data", "borrowings")).to eq([])
+    end
+
     it "returns book data and borrowing history ordered from newest" do
       book = create_book
       older = Borrowing.create!(book: book, reader: reader, borrowed_at: Time.utc(2026, 10, 1), due_at: Time.utc(2026, 10, 31))
@@ -134,6 +143,19 @@ RSpec.describe "Books API", type: :request do
         include("borrowed_at" => newer.borrowed_at.as_json, "due_at" => newer.due_at.as_json, "returned_at" => nil, "reader" => include("email" => reader.email)),
         include("borrowed_at" => older.borrowed_at.as_json, "returned_at" => older.returned_at.as_json)
       ])
+    end
+
+    it "orders borrowings by identifier when their borrowing times are equal" do
+      book = create_book
+      first_reader = reader
+      second_reader = Reader.create!(library_card_number: 654_322, full_name: "Grace Hopper", email: "grace@example.com")
+      borrowed_at = Time.utc(2026, 11, 27)
+      first = Borrowing.create!(book: book, reader: first_reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days, returned_at: borrowed_at + 1.day)
+      second = Borrowing.create!(book: book, reader: second_reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days, returned_at: borrowed_at + 1.day)
+
+      get "/books/#{book.serial_number}"
+
+      expect(json.dig("data", "borrowings").map { |borrowing| borrowing.dig("reader", "library_card_number") }).to eq([ second.reader.library_card_number, first.reader.library_card_number ])
     end
 
     it "returns not found for an unknown book" do
@@ -291,6 +313,42 @@ RSpec.describe "Books API", type: :request do
       post "/books/123456abc/returns", as: :json
 
       expect_problem(:bad_request, "Bad request")
+    end
+  end
+
+  describe "library lifecycle" do
+    it "preserves borrowing history and the serial number after archival" do
+      first_reader = reader
+      second_reader = Reader.create!(library_card_number: 654_322, full_name: "Grace Hopper", email: "grace@example.com")
+
+      post "/books", params: { book: book_attributes }, as: :json
+      book = Book.find_by!(serial_number: book_attributes[:serial_number])
+
+      post "/books/#{book.serial_number}/borrowings", params: { borrowing: { library_card_number: first_reader.library_card_number } }, as: :json
+      first_borrowing = Borrowing.find_by!(book: book, reader: first_reader)
+      post "/books/#{book.serial_number}/returns", as: :json
+
+      post "/books/#{book.serial_number}/borrowings", params: { borrowing: { library_card_number: second_reader.library_card_number } }, as: :json
+      second_borrowing = Borrowing.find_by!(book: book, reader: second_reader)
+      post "/books/#{book.serial_number}/returns", as: :json
+      delete "/books/#{book.serial_number}"
+
+      expect(response).to have_http_status(:no_content)
+      get "/books/#{book.serial_number}"
+      history = json.dig("data", "borrowings")
+      expect(history).to match([
+        include("borrowed_at" => second_borrowing.borrowed_at.as_json, "due_at" => second_borrowing.due_at.as_json, "returned_at" => second_borrowing.reload.returned_at.as_json, "reader" => include("library_card_number" => second_reader.library_card_number, "full_name" => second_reader.full_name, "email" => second_reader.email)),
+        include("borrowed_at" => first_borrowing.borrowed_at.as_json, "due_at" => first_borrowing.due_at.as_json, "returned_at" => first_borrowing.reload.returned_at.as_json, "reader" => include("library_card_number" => first_reader.library_card_number, "full_name" => first_reader.full_name, "email" => first_reader.email))
+      ])
+
+      get "/books"
+      expect(json.fetch("data")).to be_empty
+
+      post "/books", params: { book: book_attributes }, as: :json
+      expect_problem(:unprocessable_content, "Validation failed")
+
+      post "/books/#{book.serial_number}/returns", as: :json
+      expect_problem(:conflict, "Conflict")
     end
   end
 end
