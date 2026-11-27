@@ -67,6 +67,7 @@ end
 RSpec.describe "borrowing concurrency" do
   uses_transaction "allows only one concurrent borrowing for a book"
   uses_transaction "allows only one concurrent return for a borrowing"
+  uses_transaction "keeps an active borrowing and archive mutually exclusive"
 
   before do
     ActiveRecord::Base.connection.execute("TRUNCATE TABLE borrowing_reminders, borrowings, books, readers RESTART IDENTITY CASCADE")
@@ -109,5 +110,22 @@ RSpec.describe "borrowing concurrency" do
     expect(outcomes.map { |outcome| outcome[:backend_pid] }.uniq).to have_attributes(size: 2)
     expect(borrowing.reload.returned_at).to eq(Time.utc(2026, 11, 29, 12))
     expect(Borrowing.where(book: book).count).to eq(1)
+  end
+
+  it "keeps an active borrowing and archive mutually exclusive" do
+    book = Book.create!(serial_number: 123_456, title: "Dune", author: "Frank Herbert")
+    reader = Reader.create!(library_card_number: 654_321, full_name: "Ada Lovelace", email: "ada@example.com")
+    operations = [
+      -> { ArchiveBook.new(serial_number: book.serial_number, archived_at: Time.utc(2026, 11, 27, 12)).call },
+      -> { BorrowBook.new(serial_number: book.serial_number, library_card_number: reader.library_card_number, borrowed_at: Time.utc(2026, 11, 27, 12)).call }
+    ]
+
+    outcomes = ConcurrentOperations.new(operations).call
+    book.reload
+
+    expect(outcomes.count { |outcome| outcome[:error].nil? }).to eq(1)
+    expect(outcomes.map { |outcome| outcome[:error] }).to include(BorrowingConflict)
+    expect(outcomes.map { |outcome| outcome[:backend_pid] }.uniq).to have_attributes(size: 2)
+    expect(book.archived_at?).not_to eq(book.active_borrowing.present?)
   end
 end
