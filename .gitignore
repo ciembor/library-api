@@ -1,5 +1,6 @@
 /coverage/
 /.mutant/
+/.env
 /spec/examples.txt
 /tmp/*
 !/tmp/.keep

@@ -2,6 +2,26 @@
 
 Recruitment task implemented with Ruby on Rails, PostgreSQL and Docker Compose.
 
+## Run with Docker
+
+Start the application and PostgreSQL:
+
+```bash
+docker compose up --build
+```
+
+The API is available at `http://localhost:3000`; `GET /up` confirms that Rails is running. PostgreSQL data lives in the named `postgres_data` volume, so rebuilding the application image or recreating containers preserves it. Remove the volume only when a clean database is intended:
+
+If port `3000` is occupied, choose another host port without changing the container configuration:
+
+```bash
+APP_PORT=3001 docker compose up --build
+```
+
+```bash
+docker compose down --volumes
+```
+
 ## Development quality gate
 
 Install the bundle and run the complete gate:
