@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+export RAILS_ENV=test
+export DATABASE_URL="${DATABASE_URL:-postgresql://library:${POSTGRES_PASSWORD:-library}@127.0.0.1:${DB_PORT:-5433}/momentum_task_test}"
+
+bundle exec rails db:prepare
+SIMPLECOV_ENABLED=false OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES bundle exec mutant run \
+  --usage opensource --integration rspec --require ./config/environment --jobs 4 \
+  "Book#status" "Borrowing#due_at_matches_borrowed_at" "Borrowing#returned_at_follows_borrowed_at"

@@ -33,7 +33,7 @@ docker compose up -d db
 bin/quality
 ```
 
-The gate runs RuboCop with autocorrection, Reek, test database preparation, RSpec with 100% line and branch coverage for `app/`, and Mutant in that order. The local pre-commit hook runs the same gate. Mutant currently tests three domain methods and requires every generated mutation to be killed. Reek excludes Rails migration DSL files; application and test code remain checked.
+The pre-commit gate runs RuboCop with autocorrection, Reek, test database preparation, and RSpec with 100% line and branch coverage for `app/`. The pre-push hook then runs Mutant. It currently tests three domain methods and requires every generated mutation to be killed. Reek excludes Rails migration DSL files; application and test code remain checked.
 
 To run the gate inside Docker against a separate test database:
 

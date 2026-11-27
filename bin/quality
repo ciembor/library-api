@@ -8,6 +8,3 @@ RUBOCOP_CACHE_ROOT=tmp/rubocop-cache bundle exec rubocop --autocorrect
 bundle exec reek .
 bundle exec rails db:prepare
 bundle exec rspec
-SIMPLECOV_ENABLED=false OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES bundle exec mutant run \
-  --usage opensource --integration rspec --require ./config/environment --jobs 4 \
-  "Book#status" "Borrowing#due_at_matches_borrowed_at" "Borrowing#returned_at_follows_borrowed_at"
