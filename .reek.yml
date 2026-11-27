@@ -1,2 +1,11 @@
 exclude_paths:
   - db/migrate
+
+detectors:
+  InstanceVariableAssumption:
+    exclude:
+      - BorrowingReminderMailer
+      - SendBorrowingReminderJob
+  NilCheck:
+    exclude:
+      - SendBorrowingReminderJob#perform

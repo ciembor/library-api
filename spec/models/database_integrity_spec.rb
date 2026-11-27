@@ -51,4 +51,14 @@ RSpec.describe "library database integrity" do
     Borrowing.insert_all!([ valid ])
     expect(Borrowing.where(book: book).count).to eq(2)
   end
+
+  it "enforces valid reminder kinds and one reminder per borrowing and kind" do
+    borrowing = Borrowing.create!(book: book, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days)
+    valid = { borrowing_id: borrowing.id, kind: "due_date", payload: { to: reader.email }, sent_at: borrowed_at }
+
+    reject_insert(BorrowingReminder, valid.merge(kind: "unknown"))
+    reject_insert(BorrowingReminder, valid.except(:payload))
+    BorrowingReminder.insert_all!([ valid ])
+    reject_insert(BorrowingReminder, valid)
+  end
 end

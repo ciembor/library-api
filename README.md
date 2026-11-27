@@ -1,6 +1,6 @@
 # Library API
 
-Ruby on Rails 8 API-only application for a library recruitment task. The repository currently contains the running stack, library catalog, reader registry, and read-only borrowing history. Borrowing and return operations are planned in [BACKLOG.md](BACKLOG.md).
+Ruby on Rails 8 API-only application for a library recruitment task. The repository contains the running stack, library catalog, reader registry, borrowing history, and durable return reminders.
 
 ## Start
 
@@ -33,9 +33,10 @@ curl -X POST http://localhost:3000/books/123456/borrowings \
 curl -X POST http://localhost:3000/books/123456/returns
 curl -X DELETE -i http://localhost:3000/books/123456
 curl http://localhost:3000/readers/654321
+docker compose exec web ./bin/rails runner 'pp BorrowingReminder.order(:created_at).pluck(:kind, :payload)'
 ```
 
-`GET /up` returns HTTP 200 when Rails starts successfully. `POST /books` and `POST /readers` return `201`; `GET /books` returns only non-archived books and paginates with `page` and `per_page` (default 20, maximum 100). `GET /books/:serial_number` returns the borrowing history from newest to oldest. `POST /books/:serial_number/borrowings` creates a 30-day borrowing, and `POST /books/:serial_number/returns` closes the active borrowing. Both state transitions lock the book row and return `409` for an invalid state. `DELETE /books/:serial_number` archives an available book with `204`; it returns `409` for a borrowed book. Successful responses use `application/json`. Errors use RFC 9457 `application/problem+json` with `type`, `title`, `status`, `detail`, and field-level `errors` where applicable.
+`GET /up` returns HTTP 200 when Rails starts successfully. `POST /books` and `POST /readers` return `201`; `GET /books` returns only non-archived books and paginates with `page` and `per_page` (default 20, maximum 100). `GET /books/:serial_number` returns the borrowing history from newest to oldest. `POST /books/:serial_number/borrowings` creates a 30-day borrowing, schedules reminders for three days before and on the due date, and `POST /books/:serial_number/returns` closes the active borrowing. The worker rechecks the borrowing before generating a reminder; the generated Action Mailer payload is logged and saved in `borrowing_reminders`. `DELETE /books/:serial_number` archives an available book with `204`; it returns `409` for a borrowed book. Successful responses use `application/json`. Errors use RFC 9457 `application/problem+json` with `type`, `title`, `status`, `detail`, and field-level `errors` where applicable.
 
 ## Tests and quality gate
 
@@ -47,7 +48,7 @@ docker compose up -d db
 bin/quality
 ```
 
-The pre-commit gate runs RuboCop with autocorrection, Reek, test database preparation, and RSpec with 100% line and branch coverage for `app/`. The pre-push hook then runs Mutant. It currently tests three domain methods and requires every generated mutation to be killed. Reek excludes Rails migration DSL files; application and test code remain checked.
+The pre-commit gate runs RuboCop with autocorrection, Reek, test database preparation, and RSpec with 100% line and branch coverage for `app/`. The pre-push hook then runs Mutant against the domain methods and requires every generated mutation to be killed. Reek excludes Rails migration DSL files and framework callback classes; application and test code remain checked.
 
 To run the gate inside Docker against a separate test database:
 
@@ -69,4 +70,4 @@ SIMPLECOV_ENABLED=false bundle exec rake rswag:specs:swaggerize
 - A one-shot Compose setup service prepares both databases before web and worker start. Repeated runs are safe.
 - Rswag serves a checked-in OpenAPI 3.1 document. Its library operations will be generated from request specs as they are implemented.
 - Books and readers use six-digit integer identifiers with database checks and unique indexes. Reader email uniqueness is case-insensitive. Borrowing history is retained; a partial unique index allows at most one active borrowing per book. The due date is exactly 30 days after borrowing.
-- There is no authentication or real email delivery in the task scope. The API contract and reminder payloads are tracked in the backlog.
+- There is no authentication or real email delivery in the task scope. `ReminderDelivery` represents delivery by saving and logging the full Action Mailer payload; the unique `(borrowing_id, kind)` index makes retried jobs idempotent.

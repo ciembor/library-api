@@ -10,7 +10,9 @@ class BorrowBook
 
   def call
     reader = Reader.find_by!(library_card_number: @library_card_number)
-    create_borrowing(reader)
+    borrowing = create_borrowing(reader)
+    BorrowingReminderScheduler.new(borrowing).schedule
+    borrowing
   rescue ActiveRecord::RecordNotUnique
     raise BorrowingConflict, "The book is already borrowed."
   end

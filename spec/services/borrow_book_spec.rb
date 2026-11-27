@@ -1,6 +1,8 @@
 require "rails_helper"
 
 RSpec.describe BorrowBook do
+  include ActiveJob::TestHelper
+
   let(:book) { Book.create!(serial_number: 123_456, title: "Dune", author: "Frank Herbert") }
   let(:reader) { Reader.create!(library_card_number: 654_321, full_name: "Ada Lovelace", email: "ada@example.com") }
   let(:borrowed_at) { Time.utc(2026, 11, 27, 12) }
@@ -15,6 +17,18 @@ RSpec.describe BorrowBook do
     borrowing = operation.call
 
     expect(borrowing).to have_attributes(book: book, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days, returned_at: nil)
+  end
+
+  it "schedules both reminders after creating a borrowing" do
+    clear_enqueued_jobs
+
+    borrowing = operation.call
+    jobs = enqueued_jobs.select { |job| job[:job] == SendBorrowingReminderJob }
+
+    expect(jobs).to contain_exactly(
+      include(args: [ borrowing.id, "three_days_before" ], at: (borrowed_at + 27.days).to_f),
+      include(args: [ borrowing.id, "due_date" ], at: (borrowed_at + 30.days).to_f)
+    )
   end
 
   it "raises not found when the reader does not exist" do

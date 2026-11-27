@@ -72,10 +72,10 @@ Zadania poniżej są ułożone w kolejności realizacji. Każde zadanie powinno 
 
 ### 5. Przypomnienia o zwrocie
 
-- [ ] Po wypożyczeniu zaplanować przez Active Job/Solid Queue dwa zadania: na `due_at - 3 dni` i `due_at`. Zadania wykonuje proces worker uruchamiany przez Compose.
-- [ ] Przed przygotowaniem przypomnienia ponownie sprawdzić, czy wypożyczenie nadal jest aktywne. Po zwrocie nie tworzyć przypomnień.
-- [ ] Generować przypomnienia Action Mailer i użyć adaptera zapisującego/logującego pełny payload: adres email, dane czytelnika, tytuł książki, numer seryjny, termin zwrotu i rodzaj przypomnienia.
-- [ ] Dodać rejestr wysłanych przypomnień z unikalnym kluczem `(borrowing_id, kind)`, aby ponowienie zadania nie tworzyło duplikatu. W tym MVP „wysłanie” oznacza trwałe zapisanie payloadu i jego zalogowanie.
+- [x] Po wypożyczeniu zaplanować przez Active Job/Solid Queue dwa zadania: na `due_at - 3 dni` i `due_at`. Zadania wykonuje proces worker uruchamiany przez Compose.
+- [x] Przed przygotowaniem przypomnienia ponownie sprawdzić, czy wypożyczenie nadal jest aktywne. Po zwrocie nie tworzyć przypomnień.
+- [x] Generować przypomnienia Action Mailer i użyć adaptera zapisującego/logującego pełny payload: adres email, dane czytelnika, tytuł książki, numer seryjny, termin zwrotu i rodzaj przypomnienia.
+- [x] Dodać rejestr wysłanych przypomnień z unikalnym kluczem `(borrowing_id, kind)`, aby ponowienie zadania nie tworzyło duplikatu. W tym MVP „wysłanie” oznacza trwałe zapisanie payloadu i jego zalogowanie.
 
 **Akceptacja:** aktywne wypożyczenie generuje dokładnie po jednym przypomnieniu w obu terminach; zwrot przed terminem je pomija; ponowne wykonanie zadania nie dubluje wpisu.
 
