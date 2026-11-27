@@ -12,7 +12,7 @@ class BorrowingReminderScheduler
 
   def schedule_safely
     schedule
-  rescue ActiveJob::EnqueueError => error
+  rescue ActiveJob::EnqueueError, SolidQueue::Job::EnqueueError => error
     Rails.logger.error("Reminder scheduling failed for borrowing #{@borrowing.id}: #{error.message}")
   end
 

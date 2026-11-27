@@ -40,4 +40,14 @@ RSpec.describe BorrowingReminderScheduler do
     expect(borrowing.reminder_schedules.pending).to be_empty
     expect(enqueued_jobs.filter_map { |job| job[:args].second if job[:job] == SendBorrowingReminderJob }).to contain_exactly("three_days_before", "due_date")
   end
+
+  it "keeps a reminder pending when Active Job reports an enqueue failure" do
+    described_class.new(borrowing).prepare
+    configured_job = instance_double(ActiveJob::ConfiguredJob, perform_later: false)
+    allow(SendBorrowingReminderJob).to receive(:set).and_return(configured_job)
+
+    described_class.new(borrowing).schedule_safely
+
+    expect(borrowing.reminder_schedules.pending.count).to eq(2)
+  end
 end

@@ -315,6 +315,18 @@ RSpec.describe "Books API", type: :request do
       expect(Borrowing.count).to eq(0)
     end
 
+    it "rejects malformed library card numbers without creating a borrowing" do
+      book = create_book
+
+      [ "654321abc", 654_321.99 ].each do |library_card_number|
+        post "/books/#{book.serial_number}/borrowings", params: { borrowing: { library_card_number: library_card_number } }, as: :json
+
+        expect_problem(:bad_request, "Bad request")
+      end
+
+      expect(Borrowing.where(book: book)).to be_empty
+    end
+
     it "returns not found for an unknown book or reader" do
       post "/books/999999/borrowings", params: { borrowing: { library_card_number: reader.library_card_number } }, as: :json
       expect_problem(:not_found, "Not found")

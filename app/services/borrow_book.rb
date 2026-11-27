@@ -2,7 +2,7 @@
 class BorrowBook
   BORROWING_PERIOD = 30 * 24.hours
 
-  def initialize(serial_number:, library_card_number:, borrowed_at: Time.current)
+  def initialize(serial_number:, library_card_number:, borrowed_at: nil)
     @serial_number = serial_number
     @library_card_number = library_card_number
     @borrowed_at = borrowed_at
@@ -23,7 +23,7 @@ class BorrowBook
     Book.transaction do
       book = Book.lock.find_by!(serial_number: @serial_number)
       ensure_book_can_be_borrowed(book)
-      Borrowing.create!(book: book, reader: reader, borrowed_at: @borrowed_at, due_at: @borrowed_at + BORROWING_PERIOD).tap do |borrowing|
+      create_borrowing_record(book, reader).tap do |borrowing|
         BorrowingReminderScheduler.new(borrowing).prepare
       end
     end
@@ -32,5 +32,10 @@ class BorrowBook
   def ensure_book_can_be_borrowed(book)
     raise BorrowingConflict, "An archived book cannot be borrowed." if book.archived_at?
     raise BorrowingConflict, "The book is already borrowed." if book.active_borrowing
+  end
+
+  def create_borrowing_record(book, reader)
+    borrowed_at = @borrowed_at || Time.current
+    Borrowing.create!(book: book, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + BORROWING_PERIOD)
   end
 end

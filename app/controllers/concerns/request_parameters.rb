@@ -9,9 +9,9 @@ module RequestParameters
     object.permit(*attributes)
   end
 
-  def six_digit_identifier(name)
-    value = Integer(params.fetch(name), exception: false)
-    return value if value&.between?(100_000, 999_999)
+  def six_digit_identifier(name, value = params.fetch(name))
+    identifier = value.to_s
+    return identifier.to_i if /\A[1-9]\d{5}\z/.match?(identifier)
 
     raise ActionController::ParameterMissing, name
   end

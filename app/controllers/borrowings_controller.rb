@@ -1,7 +1,10 @@
 # HTTP endpoint for borrowing a library book.
 class BorrowingsController < ApplicationController
   def create
-    borrowing = BorrowBook.new(serial_number: six_digit_identifier(:book_serial_number), library_card_number: borrowing_params[:library_card_number]).call
+    borrowing = BorrowBook.new(
+      serial_number: six_digit_identifier(:book_serial_number),
+      library_card_number: six_digit_identifier(:library_card_number, borrowing_params[:library_card_number])
+    ).call
     render json: { data: BorrowingTimestampsSerializer.new(borrowing).as_json }, status: :created
   end
 
