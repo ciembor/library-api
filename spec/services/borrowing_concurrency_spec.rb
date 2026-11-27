@@ -47,7 +47,7 @@ class ConcurrentOperations
   def perform(operation)
     ActiveRecord::Base.connection_pool.with_connection do |connection|
       execute_operation(connection, operation)
-    rescue BorrowingConflict => error
+    rescue BorrowingConflict, ActiveRecord::ActiveRecordError => error
       record_outcome(connection, error.class)
     end
   end
@@ -70,6 +70,7 @@ RSpec.describe "borrowing concurrency" do
   uses_transaction "keeps an active borrowing and archive mutually exclusive"
   uses_transaction "persists and logs one reminder for concurrently executed jobs"
   uses_transaction "does not persist a reminder after a return between job lookup and delivery"
+  uses_transaction "allows only one concurrent reader registration"
 
   before do
     ActiveRecord::Base.connection.execute("TRUNCATE TABLE borrowing_reminders, borrowings, books, readers RESTART IDENTITY CASCADE")
@@ -95,6 +96,19 @@ RSpec.describe "borrowing concurrency" do
     expect(outcomes.map { |outcome| outcome[:backend_pid] }.uniq).to have_attributes(size: 2)
     expect(Borrowing.where(book: book, returned_at: nil).count).to eq(1)
     expect(Borrowing.where(book: book).count).to eq(1)
+  end
+
+  it "allows only one concurrent reader registration" do
+    operations = Array.new(2) do
+      -> { Reader.create!(library_card_number: 654_321, full_name: "Ada Lovelace", email: "ada@example.com") }
+    end
+
+    outcomes = ConcurrentOperations.new(operations).call
+
+    expect(outcomes.count { |outcome| outcome[:error].nil? }).to eq(1)
+    expect(outcomes.map { |outcome| outcome[:error] }).to include(ActiveRecord::RecordInvalid).or(include(ActiveRecord::RecordNotUnique))
+    expect(outcomes.map { |outcome| outcome[:backend_pid] }.uniq).to have_attributes(size: 2)
+    expect(Reader.where(library_card_number: 654_321).count).to eq(1)
   end
 
   it "allows only one concurrent return for a borrowing" do

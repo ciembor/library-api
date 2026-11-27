@@ -48,6 +48,15 @@ RSpec.describe "Books API", type: :request do
 
       expect_problem(422, "Validation failed")
     end
+
+    it "rejects a duplicate serial number for an archived book" do
+      create_book(book_attributes.merge(archived_at: Time.current))
+
+      post "/books", params: { book: book_attributes }, as: :json
+
+      expect_problem(:unprocessable_content, "Validation failed")
+      expect(Book.where(serial_number: book_attributes[:serial_number]).count).to eq(1)
+    end
   end
 
   describe "GET /books" do
@@ -194,6 +203,17 @@ RSpec.describe "Books API", type: :request do
       expect(response.media_type).to eq("application/json")
       expect(json).to eq("data" => { "borrowed_at" => borrowing.borrowed_at.as_json, "due_at" => borrowing.due_at.as_json })
       expect(borrowing).to have_attributes(reader: reader, due_at: be_within(1.second).of(borrowed_at + 30.days))
+    end
+
+    it "ignores protected borrowing timestamps from clients" do
+      book = create_book
+      timestamps = { borrowed_at: 1.year.ago, due_at: 1.year.from_now, returned_at: Time.current, id: 99 }
+
+      post "/books/#{book.serial_number}/borrowings", params: { borrowing: { library_card_number: reader.library_card_number }.merge(timestamps) }, as: :json
+
+      borrowing = Borrowing.find_by!(book: book)
+      expect(response).to have_http_status(:created)
+      expect(borrowing).to have_attributes(returned_at: nil, due_at: be_within(1.second).of(borrowing.borrowed_at + 30.days))
     end
 
     it "returns a bad request when borrowing data is missing" do
