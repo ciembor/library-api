@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_27_160003) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_27_160004) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,6 +37,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_27_160003) do
     t.index ["borrowing_id", "kind"], name: "index_borrowing_reminders_on_borrowing_id_and_kind", unique: true
     t.index ["borrowing_id"], name: "index_borrowing_reminders_on_borrowing_id"
     t.check_constraint "kind::text = ANY (ARRAY['three_days_before'::character varying, 'due_date'::character varying]::text[])", name: "borrowing_reminders_kind"
+  end
+
+  create_table "borrowing_reminder_schedules", force: :cascade do |t|
+    t.bigint "borrowing_id", null: false
+    t.string "kind", null: false
+    t.datetime "scheduled_at", null: false
+    t.datetime "enqueued_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["borrowing_id", "kind"], name: "index_borrowing_reminder_schedules_on_borrowing_id_and_kind", unique: true
+    t.index ["borrowing_id"], name: "index_borrowing_reminder_schedules_on_borrowing_id"
   end
 
   create_table "borrowings", force: :cascade do |t|
@@ -68,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_27_160003) do
   end
 
   add_foreign_key "borrowing_reminders", "borrowings"
+  add_foreign_key "borrowing_reminder_schedules", "borrowings"
   add_foreign_key "borrowings", "books"
   add_foreign_key "borrowings", "readers"
 end

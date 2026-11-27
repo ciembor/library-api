@@ -11,7 +11,7 @@ class BorrowBook
   def call
     reader = Reader.find_by!(library_card_number: @library_card_number)
     borrowing = create_borrowing(reader)
-    BorrowingReminderScheduler.new(borrowing).schedule
+    BorrowingReminderScheduler.new(borrowing).schedule_safely
     borrowing
   rescue ActiveRecord::RecordNotUnique
     raise BorrowingConflict, "The book is already borrowed."
@@ -23,7 +23,9 @@ class BorrowBook
     Book.transaction do
       book = Book.lock.find_by!(serial_number: @serial_number)
       ensure_book_can_be_borrowed(book)
-      Borrowing.create!(book: book, reader: reader, borrowed_at: @borrowed_at, due_at: @borrowed_at + BORROWING_PERIOD)
+      Borrowing.create!(book: book, reader: reader, borrowed_at: @borrowed_at, due_at: @borrowed_at + BORROWING_PERIOD).tap do |borrowing|
+        BorrowingReminderScheduler.new(borrowing).prepare
+      end
     end
   end
 

@@ -31,6 +31,19 @@ RSpec.describe BorrowBook do
     )
   end
 
+  it "keeps durable pending schedules when immediate enqueue fails" do
+    allow(SendBorrowingReminderJob).to receive(:set).and_raise(ActiveJob::EnqueueError, "queue unavailable")
+    allow(Rails.logger).to receive(:error)
+
+    borrowing = operation.call
+
+    expect(borrowing.reminder_schedules.pending).to contain_exactly(
+      have_attributes(kind: "three_days_before"),
+      have_attributes(kind: "due_date")
+    )
+    expect(Rails.logger).to have_received(:error).with(include("Reminder scheduling failed for borrowing #{borrowing.id}"))
+  end
+
   it "raises not found when the reader does not exist" do
     expect { operation(library_card_number: 999_999).call }.to raise_error(ActiveRecord::RecordNotFound)
   end

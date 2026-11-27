@@ -35,4 +35,11 @@ RSpec.describe ReminderDelivery do
     expect(delivery("due_date").deliver).to be_nil
     expect(Rails.logger).to have_received(:info).with(a_string_including("\"kind\":\"due_date\"")).once
   end
+
+  it "keeps the persisted payload when logging fails" do
+    allow(Rails.logger).to receive(:info).and_raise(Logger::Error, "logger unavailable")
+
+    expect { delivery.deliver }.to raise_error(Logger::Error, "logger unavailable")
+    expect(BorrowingReminder.where(borrowing: borrowing, kind: "three_days_before")).to exist
+  end
 end

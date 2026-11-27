@@ -3,6 +3,7 @@ class Borrowing < ApplicationRecord
   belongs_to :book, inverse_of: :borrowings
   belongs_to :reader, inverse_of: :borrowings
   has_many :reminders, class_name: "BorrowingReminder", inverse_of: :borrowing
+  has_many :reminder_schedules, class_name: "BorrowingReminderSchedule", inverse_of: :borrowing
 
   validates :borrowed_at, :due_at, presence: true
   validates_with BorrowingTimestampsValidator
