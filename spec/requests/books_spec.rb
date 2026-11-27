@@ -41,6 +41,13 @@ RSpec.describe "Books API", type: :request do
       expect_problem(:bad_request, "Bad request")
     end
 
+    it "returns an RFC 9457 problem for malformed JSON" do
+      post "/books", params: '{"book":', headers: { "CONTENT_TYPE" => "application/json" }
+
+      expect_problem(:bad_request, "Bad request")
+      expect(json.fetch("detail")).to eq("The request body contains invalid JSON.")
+    end
+
     it "converts a database uniqueness error into a validation problem" do
       allow_any_instance_of(Book).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
 

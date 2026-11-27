@@ -8,6 +8,7 @@ module ErrorHandling
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
     rescue_from ActiveRecord::RecordNotUnique, with: :render_record_not_unique
     rescue_from ActionController::ParameterMissing, with: :render_parameter_missing
+    rescue_from ActionDispatch::Http::Parameters::ParseError, with: :render_parse_error
     rescue_from BorrowingConflict, with: :render_borrowing_conflict
   end
 
@@ -39,6 +40,10 @@ module ErrorHandling
 
   def render_parameter_missing(error)
     render_bad_request(error.message)
+  end
+
+  def render_parse_error
+    render_bad_request("The request body contains invalid JSON.")
   end
 
   def render_bad_request(detail)
