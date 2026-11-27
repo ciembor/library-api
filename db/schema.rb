@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_27_160004) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_27_160005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,18 +27,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_27_160004) do
     t.check_constraint "serial_number >= 100000 AND serial_number <= 999999", name: "books_serial_number_six_digits"
   end
 
-  create_table "borrowing_reminders", force: :cascade do |t|
-    t.bigint "borrowing_id", null: false
-    t.string "kind", null: false
-    t.jsonb "payload", null: false
-    t.datetime "sent_at", null: false
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["borrowing_id", "kind"], name: "index_borrowing_reminders_on_borrowing_id_and_kind", unique: true
-    t.index ["borrowing_id"], name: "index_borrowing_reminders_on_borrowing_id"
-    t.check_constraint "kind::text = ANY (ARRAY['three_days_before'::character varying, 'due_date'::character varying]::text[])", name: "borrowing_reminders_kind"
-  end
-
   create_table "borrowing_reminder_schedules", force: :cascade do |t|
     t.bigint "borrowing_id", null: false
     t.string "kind", null: false
@@ -48,6 +36,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_27_160004) do
     t.datetime "updated_at", null: false
     t.index ["borrowing_id", "kind"], name: "index_borrowing_reminder_schedules_on_borrowing_id_and_kind", unique: true
     t.index ["borrowing_id"], name: "index_borrowing_reminder_schedules_on_borrowing_id"
+  end
+
+  create_table "borrowing_reminders", force: :cascade do |t|
+    t.bigint "borrowing_id", null: false
+    t.string "kind", null: false
+    t.jsonb "payload", null: false
+    t.datetime "sent_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["borrowing_id", "kind"], name: "index_borrowing_reminders_on_borrowing_id_and_kind", unique: true
+    t.index ["borrowing_id"], name: "index_borrowing_reminders_on_borrowing_id"
+    t.check_constraint "kind::text = ANY (ARRAY['three_days_before'::character varying::text, 'due_date'::character varying::text])", name: "borrowing_reminders_kind"
   end
 
   create_table "borrowings", force: :cascade do |t|
@@ -61,7 +61,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_27_160004) do
     t.index ["book_id"], name: "index_borrowings_on_active_book", unique: true, where: "(returned_at IS NULL)"
     t.index ["book_id"], name: "index_borrowings_on_book_id"
     t.index ["reader_id"], name: "index_borrowings_on_reader_id"
-    t.check_constraint "due_at = (borrowed_at + 'P30D'::interval)", name: "borrowings_due_after_30_days"
+    t.check_constraint "due_at = (borrowed_at + 'PT720H'::interval)", name: "borrowings_due_after_30_days"
     t.check_constraint "returned_at IS NULL OR returned_at >= borrowed_at", name: "borrowings_return_after_borrow"
   end
 
@@ -78,8 +78,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_27_160004) do
     t.check_constraint "library_card_number >= 100000 AND library_card_number <= 999999", name: "readers_card_number_six_digits"
   end
 
-  add_foreign_key "borrowing_reminders", "borrowings"
   add_foreign_key "borrowing_reminder_schedules", "borrowings"
+  add_foreign_key "borrowing_reminders", "borrowings"
   add_foreign_key "borrowings", "books"
   add_foreign_key "borrowings", "readers"
 end

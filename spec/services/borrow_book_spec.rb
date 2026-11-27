@@ -19,6 +19,15 @@ RSpec.describe BorrowBook do
     expect(borrowing).to have_attributes(book: book, reader: reader, borrowed_at: borrowed_at, due_at: borrowed_at + 30.days, returned_at: nil)
   end
 
+  it "uses an exact 720-hour borrowing period across a daylight-saving transition" do
+    borrowed_in_warsaw = Time.use_zone("Europe/Warsaw") { Time.zone.parse("2026-03-28 12:00:00") }
+
+    borrowing = described_class.new(serial_number: book.serial_number, library_card_number: reader.library_card_number, borrowed_at: borrowed_in_warsaw).call
+
+    expect(borrowing.due_at - borrowing.borrowed_at).to eq(720.hours)
+    expect(borrowing.reload.due_at).to eq(borrowed_in_warsaw + 720.hours)
+  end
+
   it "schedules both reminders after creating a borrowing" do
     clear_enqueued_jobs
 

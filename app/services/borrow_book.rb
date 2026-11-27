@@ -1,6 +1,6 @@
 # Creates a borrowing while serializing state changes for one book.
 class BorrowBook
-  BORROWING_PERIOD = 30.days
+  BORROWING_PERIOD = 30 * 24.hours
 
   def initialize(serial_number:, library_card_number:, borrowed_at: Time.current)
     @serial_number = serial_number

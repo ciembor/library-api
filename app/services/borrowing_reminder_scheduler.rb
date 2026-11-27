@@ -1,5 +1,7 @@
 # Schedules both due-date reminder kinds after a borrowing is committed.
 class BorrowingReminderScheduler
+  REMINDER_LEAD_TIME = 3 * 24.hours
+
   def initialize(borrowing)
     @borrowing = borrowing
   end
@@ -22,6 +24,6 @@ class BorrowingReminderScheduler
 
   def schedules
     due_at = @borrowing.due_at
-    [ [ "three_days_before", due_at - 3.days ], [ "due_date", due_at ] ]
+    [ [ "three_days_before", due_at - REMINDER_LEAD_TIME ], [ "due_date", due_at ] ]
   end
 end

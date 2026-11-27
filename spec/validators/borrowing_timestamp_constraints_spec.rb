@@ -14,7 +14,7 @@ RSpec.describe BorrowingTimestampConstraints, "#validate", mutant_expression: "B
 
     described_class.new(record, borrowing_period: 30.days).validate
 
-    expect(record.errors.to_hash).to include(due_at: [ "must be 30 days after borrowing" ], returned_at: [ "must be after borrowing" ])
+    expect(record.errors.to_hash).to include(due_at: [ "must be 30 days after borrowing" ], returned_at: [ "must be on or after borrowing" ])
   end
 
   it "accepts blank optional timestamps and valid dates", mutant_expression: "BorrowingTimestampConstraints#validate" do

@@ -29,6 +29,6 @@ class BorrowingTimestampConstraints
     return if returned_at.blank? || borrowed_at.blank?
     return unless returned_at < borrowed_at
 
-    @record.errors.add(:returned_at, "must be after borrowing")
+    @record.errors.add(:returned_at, "must be on or after borrowing")
   end
 end
